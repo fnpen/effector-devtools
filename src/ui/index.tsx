@@ -29,4 +29,6 @@ const App = () => {
   );
 };
 
-ReactDOM.render(<App />, document.body);
+const root = ReactDOM.createRoot(document.body);
+
+root.render(<App />);

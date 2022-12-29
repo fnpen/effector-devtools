@@ -1,23 +1,22 @@
 import clsx from "clsx";
 import { useStore, useStoreMap } from "effector-react";
-import React, { memo } from "react";
-import isEqual from "react-fast-compare";
+import React from "react";
 import { $selected, selectMessage } from "../store/details";
 import { $logs } from "../store/logs";
 
-export const Log = memo(({ index, style }) => {
-  const id = useStoreMap({
-    store: $logs,
-    keys: [index],
-    fn: (logs, [index]) => logs[index]?.id,
-  });
+// export const Log = memo(({ index, style }) => {
+//   const id = useStoreMap({
+//     store: $logs,
+//     keys: [index],
+//     fn: (logs, [index]) => logs[index]?.id,
+//   });
 
-  return typeof id === "number" ? (
-    <Row id={id} index={index} style={style} />
-  ) : null;
-}, isEqual);
+//   return typeof id === "number" ? (
+//     <Row id={id} index={index} style={style} />
+//   ) : null;
+// }, isEqual);
 
-export const Row = memo(({ id, index, style }) => {
+export const Row = ({ id, index, style }) => {
   const selected = useStore($selected);
 
   const log = useStoreMap({
@@ -53,4 +52,4 @@ export const Row = memo(({ id, index, style }) => {
       <div title={log.payload}>{log.payload}</div>
     </div>
   ) : null;
-}, isEqual);
+};

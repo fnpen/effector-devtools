@@ -7,6 +7,29 @@
     max-height: 90%;
   }
 
+  & .ed-btn-tobottom {
+    user-select: none;
+    position: absolute;
+    cursor: pointer;
+    background: rgb(243, 243, 243);
+    border: 1px solid #9c9b9b;
+    display: block;
+    bottom: 6px;
+    right: 30px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+
+    &:before {
+      content: "";
+      background-image: url(line-awesome/svg/arrow-down-solid.svg);
+      display: block;
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+    }
+  }
+
   & .ed-toolbar {
     user-select: none;
     display: flex;

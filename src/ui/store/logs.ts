@@ -55,6 +55,13 @@ sample({
   target: $filteredOutLogs,
 });
 
+// export const $logHash = $logs.map(logs =>
+//   logs.reduce<{ [id: number]: number }>((acc, log, index) => {
+//     acc[log.id] = index;
+//     return acc;
+//   }, {})
+// );
+
 export const $logIds = $logs.map(logs => logs.map(log => log.id));
 
 const logRecieved = createEvent<Message>();
