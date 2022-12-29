@@ -1,29 +1,59 @@
-import { createEvent as createEventOrig, Event, Subscription } from "effector";
+import {
+  createEffect as createEffectOrig,
+  createEvent as createEventOrig,
+  createStore as createStoreOrig,
+  Effect,
+  Event,
+  Store,
+  Subscription,
+  Unit,
+} from "effector";
+import debounce from "lodash.debounce";
 
+import { filterLogsFn } from "../common/filterLogsFn";
 import { setConfig } from "./config";
-import { EventCreateMessage, EventWatchMessage } from "./types";
 
 import type { Publisher } from "./rempl-publisher";
 import { publisher, publishLog } from "./rempl-publisher";
 
-type LoggableEvent<T> = Event<T> & {
-  loggingEnabled: boolean;
-  loggingUnwatchFn?: Subscription;
-  logging: (enabled: boolean) => void;
+type Loggable = {
+  enabled: boolean;
+  unwatch?: Subscription;
+  setEnabled: (enabled: boolean) => void;
+  getKind: () => string;
+  getName: () => string;
+  log: (op: string, payload?: any) => void;
+  // graphite: Node;
 };
 
 class Controller {
   publisher: Publisher;
   enabled: boolean = true;
+  query: string = "";
 
-  _events: Set<LoggableEvent<any>> = new Set();
+  _events: Set<{ logger: Loggable }> = new Set();
 
   constructor(publisher: Publisher) {
     this.publisher = publisher;
     this.bindRemote();
 
+    this.sendState();
     this.onStateChanged("enabled", this.enabled);
   }
+
+  getState() {
+    return {
+      enabled: this.enabled,
+      query: this.query,
+      subscriptions: Array.from(this._events.values())
+        .filter(unit => unit.logger.enabled)
+        .map(unit => unit.logger.getName()),
+    };
+  }
+
+  sendState = debounce(() => {
+    this.publisher.ns("state").publish(this.getState());
+  }, 80);
 
   onStateChanged(name: string, value: any) {
     this.publisher.ns("stateChanged").publish({
@@ -34,68 +64,121 @@ class Controller {
 
   bindRemote() {
     this.publisher.provide("setEnabled", this.setEnabled.bind(this));
+    this.publisher.provide("setFilterQuery", this.setFilterQuery.bind(this));
+  }
+
+  setFilterQuery(query: string) {
+    this.query = query;
+
+    this.setEnabled(this.enabled);
   }
 
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
     this.onStateChanged("enabled", enabled);
 
-    for (let event of this._events) {
-      if (
-        (enabled && !event.loggingEnabled) ||
-        (!enabled && event.loggingEnabled)
-      ) {
-        event.logging(enabled);
+    const filterFn = filterLogsFn(this.query);
+
+    for (let unit of this._events) {
+      if (!enabled) {
+        unit.logger.setEnabled(false);
       }
+
+      unit.logger.setEnabled(filterFn(unit.logger.getName()));
     }
   }
 
-  onEventCreate(event: LoggableEvent<any>) {
-    this._events.add(event);
+  onUnitCreate(unit: { logger: Loggable }) {
+    this._events.add(unit);
 
     if (this.enabled) {
-      event.logging(true);
+      unit.logger.setEnabled(true);
     }
 
-    publishLog({
-      op: "event-create",
-      name: event.getType(),
-    } as EventCreateMessage);
+    unit.logger.log("unit-create");
+
+    this.sendState();
+  }
+
+  createLogger<T>(unit: Unit<T>, parent?: Unit<T>) {
+    const logger: Loggable = {
+      enabled: false,
+      getName: () => {
+        return (
+          (parent ? (parent as any).shortName + "." : "") +
+          (unit as any).shortName
+        );
+      },
+      getKind: () => (parent ? parent : unit).kind,
+      setEnabled: enabled => {
+        if (enabled === logger.enabled) {
+          return;
+        }
+
+        if (enabled) {
+          if (!logger.enabled) {
+            const unwatch = unit.watch(payload => {
+              unit.logger.log("unit-watch", payload);
+            });
+
+            logger.unwatch = unwatch;
+          }
+        } else if (logger.unwatch) {
+          logger.unwatch();
+        }
+
+        logger.enabled = enabled;
+
+        this.sendState();
+      },
+      log: (op: string, payload?: any) => {
+        publishLog({
+          op,
+          kind: logger.getKind(),
+          name: logger.getName(),
+          payload,
+        });
+      },
+    };
+
+    return logger;
   }
 }
 
 const controller = new Controller(publisher);
 
-const createEvent: typeof createEventOrig = <T>(...args: any) => {
-  const event = createEventOrig(...args) as LoggableEvent<T>;
+const attachLogger = <T>(unit: Unit<T>, parent?: Unit<T>) => {
+  (unit as any).logger = controller.createLogger(unit, parent);
 
-  event.loggingEnabled = false;
+  controller.onUnitCreate(unit as any);
+};
 
-  event.logging = enabled => {
-    if (enabled) {
-      if (!event.loggingEnabled) {
-        const name = event.getType();
-        const unwatch = event.watch(payload => {
-          publishLog({
-            op: "event-watch",
-            name,
-            payload,
-          } as EventWatchMessage);
-        });
+const createStore: typeof createStoreOrig = <T>(...args: any) => {
+  const event = createStoreOrig(...args) as Loggable & Store<T>;
 
-        event.loggingUnwatchFn = unwatch;
-      }
-    } else if (event.loggingUnwatchFn) {
-      event.loggingUnwatchFn();
-    }
-
-    event.loggingEnabled = enabled;
-  };
-
-  controller.onEventCreate(event);
+  attachLogger(event);
 
   return event;
 };
 
+const createEvent: typeof createEventOrig = <T>(...args: any) => {
+  const event = createEventOrig(...args) as Loggable & Event<T>;
+
+  attachLogger(event);
+
+  return event;
+};
+
+const createEffect: typeof createEffectOrig = <T, A>(...args: any) => {
+  const effect = createEffectOrig(...args) as Loggable & Effect<T, A>;
+
+  attachLogger(effect);
+  attachLogger(effect.done, effect);
+  attachLogger(effect.fail, effect);
+  attachLogger(effect.finally, effect);
+
+  return effect;
+};
+
 export * from "effector";
-export { createEvent, setConfig as config };
+export { createEvent, createEffect, createStore, setConfig as config };

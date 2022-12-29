@@ -49,14 +49,15 @@ publisher.provide("isReady", () => {
   }
 });
 
-export const publishLog = (message: Message) => {
+export const publishLog = (message: Omit<Message, "id">) => {
   const id = eventIdSeed++;
 
-  const { name, op, payload } = message;
+  const { name, op, kind, payload } = message;
 
   const data = {
     id,
     name,
+    kind,
     op,
     payload: stringify(payload),
   };

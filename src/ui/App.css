@@ -8,15 +8,41 @@
   }
 
   & .ed-toolbar {
+    user-select: none;
     display: flex;
     align-items: stretch;
     justify-content: flex-start;
     height: 32px;
     background: rgb(243, 243, 243);
     border-bottom: 2px solid #d1d1d1;
+    padding: 0 4px;
 
     & a {
       cursor: pointer;
+    }
+
+    & .ed-toolbar-space {
+      flex: 1;
+    }
+
+    & .ed-toolbar-separator {
+      width: 1px;
+      height: 14px;
+      background: #a4a4a4;
+      align-self: center;
+      margin: 0 4px;
+    }
+
+    & .ed-toolbar-input {
+      & input {
+        font-size: 12px;
+      }
+    }
+
+    & .ed-toolbar-text,
+    & .ed-toolbar-input {
+      align-self: center;
+      margin: 0 8px;
     }
 
     & .ed-btn {
@@ -117,16 +143,40 @@
           background-color: #ddefff;
         }
 
+        & .ed-list-item-icons {
+          display: flex;
+          justify-content: center;
+        }
+
         & .op-icon {
           background-repeat: no-repeat;
           background-size: 80% 80%;
           background-position: center;
+          /* height: 100%; */
+          width: 24px;
+
+          &.op-icon-second {
+            background-repeat: no-repeat;
+            background-size: 80% 80%;
+            background-position: center;
+            width: 14px;
+            margin-left: -4px;
+          }
         }
-        & .op-icon-event-create {
-          background-image: url(line-awesome/svg/calendar-plus.svg);
+        & .op-icon-unit-create {
+          background-image: url(line-awesome/svg/plus-solid.svg);
         }
-        & .op-icon-event-watch {
-          background-image: url(line-awesome/svg/calendar-day-solid.svg);
+        & .op-icon-unit-watch {
+          background-image: url(line-awesome/svg/eye-solid.svg);
+        }
+        & .op-icon-event {
+          background-image: url(line-awesome/svg/calendar.svg);
+        }
+        & .op-icon-store {
+          background-image: url(line-awesome/svg/sticky-note-solid.svg);
+        }
+        & .op-icon-effect {
+          background-image: url(line-awesome/svg/bolt-solid.svg);
         }
 
         & > div {

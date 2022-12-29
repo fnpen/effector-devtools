@@ -2,23 +2,21 @@ declare module "common-types" {
   export interface BaseMessage {
     op: string;
     id: number;
-    commitId: number;
-  }
-
-  export type UnitType = 1;// | 2;
-
-  export interface EventCreateMessage extends BaseMessage {
-    op: "event-create";
+    kind: string;
     name: string;
+    payload?: any;
   }
 
-  export interface EventWatchMessage extends BaseMessage {
-    op: "event-watch";
-    name: string;
-    payload: any;
-  }
+  // export type UnitType = 1; // | 2;
 
-  export type Message =
-    | EventCreateMessage
-    | EventWatchMessage
+  // export interface EventCreateMessage extends BaseMessage {
+  //   op: "unit-create";
+  // }
+
+  // export interface EventWatchMessage extends BaseMessage {
+  //   op: "unit-watch";
+  //   payload: any;
+  // }
+
+  export type Message = BaseMessage; //EventCreateMessage | EventWatchMessage;
 }

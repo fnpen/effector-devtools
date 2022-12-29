@@ -1,35 +1,56 @@
 import clsx from "clsx";
 import { useStore, useStoreMap } from "effector-react";
 import React, { memo } from "react";
-import { areEqual } from "react-window";
+import isEqual from "react-fast-compare";
 import { $selected, selectMessage } from "../store/details";
 import { $logs } from "../store/logs";
 
-export const Log = memo(({ index, style, ...e }) => {
-  const selected = useStore($selected);
-  const log =
-    useStoreMap({
-      store: $logs,
-      keys: [index],
-      fn: (logs, [index]) => logs[index],
-    }) || {};
+export const Log = memo(({ index, style }) => {
+  const id = useStoreMap({
+    store: $logs,
+    keys: [index],
+    fn: (logs, [index]) => logs[index]?.id,
+  });
 
-  return (
+  return typeof id === "number" ? (
+    <Row id={id} index={index} style={style} />
+  ) : null;
+}, isEqual);
+
+export const Row = memo(({ id, index, style }) => {
+  const selected = useStore($selected);
+
+  const log = useStoreMap({
+    store: $logs,
+    keys: [id],
+    fn: (logs, [id]) => logs.find(log => log.id === id),
+  });
+
+  return typeof log?.id === "number" ? (
     <div
       className={clsx("ed-list-item", {
         "ed-list-item--odd": index % 2 === 0,
         "ed-list-item--selected": selected === log.id,
       })}
       style={style}
-      title={log.payload}
       onClick={() => selectMessage(log.id)}
     >
-      <div
-        className={clsx("op-icon", `op-icon-${log.op}`)}
-        title={log.op}
-      ></div>
-      <div>{log.name}</div>
-      <div>{log.payload}</div>
+      <div className={"ed-list-item-icons"} title={log.op}>
+        <div
+          className={clsx("op-icon", `op-icon-${log.kind}`)}
+          title={log.kind}
+        ></div>
+        <div
+          className={clsx(
+            "op-icon op-icon-second",
+            `op-icon-${log.op}`,
+            `op-icon-${log.op}-${log.kind}`
+          )}
+          title={log.op}
+        ></div>
+      </div>
+      <div title={log.name}>{log.name}</div>
+      <div title={log.payload}>{log.payload}</div>
     </div>
-  );
-}, areEqual);
+  ) : null;
+}, isEqual);
