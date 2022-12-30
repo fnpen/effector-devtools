@@ -43,17 +43,8 @@ $state.on(setExpanded, (state, expanded) => ({ ...state, expanded }));
 $state.on(toogleEnable, state => ({ ...state, enabled: !state.enabled }));
 $state.on(setZoom, (state, zoom) => ({ ...state, zoom }));
 
-$zoom.watch(zoom => {
-  remoteSubscriber.callRemote("setZoom", zoom);
-});
-$enabled.watch(enabled => {
-  remoteSubscriber.callRemote("setEnabled", enabled);
+$state.watch(({ subscriptions, ...state }) => {
+  remoteSubscriber.callRemote("setState", state);
 });
 
-remoteSubscriber.ns("state").subscribe(state => {
-  changeState(state);
-});
-
-$filterQuery.watch(query => {
-  remoteSubscriber.callRemote("setFilterQuery", query);
-});
+remoteSubscriber.ns("state").subscribe(changeState);

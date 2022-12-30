@@ -21,7 +21,7 @@ export default declare((api, options: Options = {}) => {
     ImportDeclaration(path: NodePath<t.ImportDeclaration>, state: PluginPass) {
       if (t.isLiteral(path.node.source)) {
         if (replaceToDevtools.includes(path.node.source.value)) {
-          path.node.source.value = "effector-devtools-ng/injector";
+          path.node.source.value = "@fnpen/effector-devtools/injector";
         }
       }
     },
@@ -30,9 +30,8 @@ export default declare((api, options: Options = {}) => {
   // const instance = effectorPlugin(api, { addLoc: true, addNames: true, ...effector });
 
   return {
-    name: "effector-devtools-ng/babel-plugin",
+    name: "@fnpen/effector-devtools/babel-plugin",
     visitor: {
-      
       Program: {
         enter(path, state) {
           path.traverse(importVisitor, state);

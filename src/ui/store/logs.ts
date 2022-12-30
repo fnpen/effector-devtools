@@ -72,7 +72,7 @@ $logs
 
     if (log.payload) {
       if (log.payload.length > 200) {
-        log.payloadShort = log.payload.slice(0, 200);
+        log.payloadShort = log.payload.slice(0, 200) + "…";
       }
     }
 

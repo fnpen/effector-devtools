@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { TableStateProvider } from "../Table";
+import { TableStateProvider } from "../../Table";
 
 export const tabs: { [key: string]: string } = {
   preview: "Preview",

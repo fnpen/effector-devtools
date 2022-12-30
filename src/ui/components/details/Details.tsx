@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { TableStateProvider } from "../Table";
+import { TableStateProvider } from "../../Table";
 import { DetailsBodyHistory } from "./DetailsBodyHistory";
 import { DetailsBodyPayload } from "./DetailsBodyPayload";
 import { DetailsBodyPreview } from "./DetailsBodyPreview";
@@ -19,25 +19,12 @@ export const DetailsBody = () => {
 };
 
 export const Details = () => {
-  const { selected, setSelected } = useContext(TableStateProvider);
+  const { selected } = useContext(TableStateProvider);
 
   return selected ? (
-    // <GlobalHotKeys
-    //   keyMap={{
-    //     ESC: ["esc"],
-    //   }}
-    //   handlers={{
-    //     ESC: e => {
-    //       debugger;
-    //       e.preventDefault();
-    //       setSelected(false);
-    //     },
-    //   }}
-    // >
     <div className="ed-details">
       <DetailsToolbar />
       <DetailsBody />
     </div>
-  ) : // </GlobalHotKeys>
-  null;
+  ) : null;
 };

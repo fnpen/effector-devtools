@@ -1,5 +1,5 @@
 {
-  "name": "effector-devtools-ng",
+  "name": "@fnpen/effector-devtools",
   "version": "0.1.0",
   "description": "TODO",
   "repository": "TODO",
@@ -12,11 +12,9 @@
   "main": "./dist/effector-injector.js",
   "exports": {
     ".": "./dist/effector-injector.js",
-    "./injector": "./dist/effector-injector.js",
+    "./injector": "./dist/effector-injector.mjs",
     "./babel-plugin": {
-      "import": "./dist/effector-babel-plugin.mjs",
-      "require": "./dist/effector-babel-plugin.js",
-      "default": "./dist/effector-babel-plugin.mjs"
+      "default": "./dist/effector-babel-plugin.js"
     },
     "./package.json": "./package.json"
   },

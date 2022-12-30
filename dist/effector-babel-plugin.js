@@ -30,13 +30,13 @@ var babel_plugin_default = (0, import_helper_plugin_utils.declare)((api, options
     ImportDeclaration(path, state) {
       if (import_core.types.isLiteral(path.node.source)) {
         if (replaceToDevtools.includes(path.node.source.value)) {
-          path.node.source.value = "effector-devtools-ng/injector";
+          path.node.source.value = "@fnpen/effector-devtools/injector";
         }
       }
     }
   };
   return {
-    name: "effector-devtools-ng/babel-plugin",
+    name: "@fnpen/effector-devtools/babel-plugin",
     visitor: {
       Program: {
         enter(path, state) {

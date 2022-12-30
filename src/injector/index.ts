@@ -1,4 +1,4 @@
-import { State } from "common-types";
+import { StaticState } from "common-types";
 import {
   createEffect as createEffectOrig,
   createEvent as createEventOrig,
@@ -18,8 +18,8 @@ import { setConfig } from "./config";
 import type { Publisher } from "./rempl-publisher";
 import { publisher, publishLog } from "./rempl-publisher";
 
-const localData = ((): Partial<State> => {
-  let data = {} as State;
+const localData = ((): Partial<StaticState> => {
+  let data = {} as StaticState;
   try {
     data = JSON.parse(window.localStorage.getItem("effector-devtools") || "{}");
   } catch (e) {
@@ -41,7 +41,7 @@ type Loggable = {
 class Controller {
   publisher: Publisher;
 
-  state: State;
+  state: StaticState;
 
   _events: Set<{ logger: Loggable }> = new Set();
 
@@ -55,9 +55,9 @@ class Controller {
 
     this.publisher = publisher;
 
-    this.bindRemote();
+    this.#bindRemote();
 
-    this.sendState();
+    this.#sendState();
   }
 
   getState() {
@@ -69,38 +69,48 @@ class Controller {
     };
   }
 
-  sendState = debounce(() => {
+  #sendState = debounce(() => {
     this.publisher.ns("state").publish(this.getState());
+  }, 80);
+
+  #saveState = debounce(() => {
     window.localStorage.setItem(
       "effector-devtools",
       JSON.stringify(this.state)
     );
   }, 80);
 
-  bindRemote() {
-    this.publisher.provide("setZoom", this.setZoom.bind(this));
-    this.publisher.provide("setEnabled", this.setEnabled.bind(this));
-    this.publisher.provide("setFilterQuery", this.setFilterQuery.bind(this));
+  #bindRemote() {
+    this.publisher.provide("setState", this.setState.bind(this));
   }
 
-  setFilterQuery(query: string) {
+  setState(state: StaticState) {
+    this.#setEnabled(state.enabled);
+    this.#setFilterQuery(state.query);
+
+    this.state.zoom = state.zoom;
+    this.state.expanded = !!state.expanded;
+
+    this.#saveState();
+  }
+
+  #setFilterQuery(query: string) {
     if (this.state.query === query) {
       return;
     }
 
     this.state.query = query;
 
-    this.setEnabled(this.state.enabled);
+    this.#setEnabled(this.state.enabled);
 
-    this.sendState();
+    this.#sendState();
   }
 
-  setZoom(zoom: number) {
-    this.state.zoom = zoom;
-    this.sendState();
-  }
+  #setEnabled(enabled: boolean) {
+    if (enabled === this.state.enabled) {
+      return;
+    }
 
-  setEnabled(enabled: boolean) {
     this.state.enabled = enabled;
 
     const filterFn = filterLogsFn(this.state.query);
@@ -122,9 +132,18 @@ class Controller {
       unit.logger.setEnabled(true);
     }
 
-    unit.logger.log("unit-create");
+    // It's non informative for unit event
+    if (
+      unit.kind !== "store" &&
+      !(
+        unit.logger.getKind() === "effect" &&
+        ["done", "fail"].includes(unit.shortName)
+      )
+    ) {
+      unit.logger.log("unit-create");
+    }
 
-    this.sendState();
+    this.#sendState();
   }
 
   createLogger<T>(unit: Unit<T>, parent?: Unit<T>) {
@@ -145,6 +164,13 @@ class Controller {
         if (enabled) {
           if (!logger.enabled) {
             const unwatch = unit.watch(payload => {
+              // if (payload?.error) {
+              //   console.log(
+              //     payload,
+              //     JSON.stringify(payload),
+              //     Object.getOwnPropertyNames(payload?.error)
+              //   );
+              // }
               unit.logger.log("unit-watch", payload);
             });
 
@@ -156,7 +182,7 @@ class Controller {
 
         logger.enabled = enabled;
 
-        this.sendState();
+        this.#sendState();
       },
       log: (op: string, payload?: any) => {
         publishLog({
@@ -202,7 +228,7 @@ const createEffect: typeof createEffectOrig = <T, A>(...args: any) => {
   attachLogger(effect);
   attachLogger(effect.done, effect);
   attachLogger(effect.fail, effect);
-  attachLogger(effect.finally, effect);
+  // attachLogger(effect.finally, effect);
 
   return effect;
 };

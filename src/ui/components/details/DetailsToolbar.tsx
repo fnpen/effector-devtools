@@ -2,8 +2,8 @@ import clsx from "clsx";
 import Times from "line-awesome/svg/times-circle-solid.svg";
 import React, { useContext, useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { TableStateProvider } from "../Table";
-import { Toolbar } from "./Toolbar";
+import { TableStateProvider } from "../../Table";
+import { Toolbar } from "./../Toolbar";
 import { tabs, useTabsState } from "./useTabsState";
 
 export const DetailsToolbar = () => {

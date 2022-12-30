@@ -7,13 +7,13 @@ var babel_plugin_default = declare((api, options = {}) => {
     ImportDeclaration(path, state) {
       if (t.isLiteral(path.node.source)) {
         if (replaceToDevtools.includes(path.node.source.value)) {
-          path.node.source.value = "effector-devtools-ng/injector";
+          path.node.source.value = "@fnpen/effector-devtools/injector";
         }
       }
     }
   };
   return {
-    name: "effector-devtools-ng/babel-plugin",
+    name: "@fnpen/effector-devtools/babel-plugin",
     visitor: {
       Program: {
         enter(path, state) {

@@ -30,4 +30,8 @@ declare module "common-types" {
   // }
 
   export type Message = BaseMessage; //EventCreateMessage | EventWatchMessage;
+
+  export type ToolsMessage = Message & {
+    index: number;
+  }; //EventCreateMessage | EventWatchMessage;
 }

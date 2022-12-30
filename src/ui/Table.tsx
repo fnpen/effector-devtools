@@ -1,5 +1,5 @@
 import React, { createContext } from "react";
-import { Details } from "./components/Details";
+import { Details } from "./components/details/Details";
 import { LogsTable } from "./components/LogsTable";
 
 export const IdsProvider = createContext<number[]>([]);

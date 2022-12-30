@@ -3,9 +3,9 @@ import { useStoreMap } from "effector-react";
 import hlsl from "highlight.js/lib/core";
 import json from "highlight.js/lib/languages/json";
 import React, { useContext, useEffect, useState, useTransition } from "react";
-import { $logs } from "../store/logs";
-import { TableStateProvider } from "../Table";
-import { NoData } from "./NoData";
+import { $logs } from "../../store/logs";
+import { TableStateProvider } from "../../Table";
+import { NoData } from "./../NoData";
 
 hlsl.registerLanguage("json", json);
 
