@@ -14,7 +14,7 @@
     background: rgb(243, 243, 243);
     border: 1px solid #9c9b9b;
     display: block;
-    bottom: 6px;
+    bottom: 12px;
     right: 30px;
     padding: 4px 8px;
     display: flex;
@@ -113,8 +113,10 @@
     }
   }
 
-  & .ed-body {
+  & .ed-body,
+  & .ed-logs {
     flex: 1;
+    height: 100%;
   }
 
   & .ed-table {
@@ -239,6 +241,10 @@
     display: flex;
     flex-direction: column;
 
+    box-shadow: -1px 0 1px hsl(0deg 0% 0% / 0.055),
+      -2px 0 2px hsl(0deg 0% 0% / 0.055), -4px 0 4px hsl(0deg 0% 0% / 0.055),
+      -8px 0 8px hsl(0deg 0% 0% / 0.055);
+
     & .ed-details-body {
       min-height: 0;
       flex: 1;
@@ -249,10 +255,15 @@
         height: 100%;
       }
 
-      & .ed-details-body-payload {
+      & .ed-details-body-code {
         & pre {
-          padding: 8px;
+          padding: 14px !important;
           margin: 0px;
+        }
+
+        &.ed-details-body-code-raw pre code {
+          display: flex;
+          flex-wrap: wrap;
         }
       }
     }

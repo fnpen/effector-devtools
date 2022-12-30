@@ -16,23 +16,25 @@ debounce({
   target: changeFilterQuery,
 });
 
-export const $filteredOutLogs = createStore<Message[]>([]);
-export const $logs = createStore<Message[]>([]);
+export const $filteredOutLogIds = createStore<number[]>([]);
+export const $logs = createStore<{ [id: number]: Message }>({});
+export const $storeHistory = createStore<{ [unitName: string]: any }>({});
+export const $logIds = createStore<number[]>([]);
 
 const $filtrationResult = sample({
   clock: $filterQuery,
-  source: combine([$logs, $filteredOutLogs, $filterQuery]),
-  fn: ([logs, filteredOutLogs, filterQuery]) => {
+  source: combine([$logs, $logIds, $filteredOutLogIds, $filterQuery]),
+  fn: ([logs, logIds, filteredOutLogIds, filterQuery]) => {
     const filterLogs = filterLogsFn(filterQuery);
 
-    const passed: Message[] = [];
-    const notPassed: Message[] = [];
+    const passed: number[] = [];
+    const notPassed: number[] = [];
 
-    [...logs, ...filteredOutLogs].forEach(log => {
-      if (filterLogs(log.name)) {
-        passed.push(log);
+    [...logIds, ...filteredOutLogIds].forEach(logId => {
+      if (filterLogs(logs[logId])) {
+        passed.push(logId);
       } else {
-        notPassed.push(log);
+        notPassed.push(logId);
       }
     });
 
@@ -46,23 +48,14 @@ const $filtrationResult = sample({
 sample({
   clock: $filtrationResult,
   fn: result => result.passed,
-  target: $logs,
+  target: $logIds,
 });
 
 sample({
   clock: $filtrationResult,
   fn: result => result.notPassed,
-  target: $filteredOutLogs,
+  target: $filteredOutLogIds,
 });
-
-// export const $logHash = $logs.map(logs =>
-//   logs.reduce<{ [id: number]: number }>((acc, log, index) => {
-//     acc[log.id] = index;
-//     return acc;
-//   }, {})
-// );
-
-export const $logIds = $logs.map(logs => logs.map(log => log.id));
 
 const logRecieved = createEvent<Message>();
 export const emptyLogs = createEvent();
@@ -73,11 +66,45 @@ $logs
     }
 
     if (log.payload) {
-      // TODO: later in React Details?
-      log.payloadData = JSON.parse(log.payload);
+      if (log.payload.length > 200) {
+        log.payloadShort = log.payload.slice(0, 200);
+      }
     }
 
-    return [...logs, log];
+    return { ...logs, [log.id]: log };
+  })
+  .reset(emptyLogs);
+
+$storeHistory
+  .on(logRecieved, (history, log) => {
+    if (
+      !log ||
+      log.kind !== "store" ||
+      log.op !== "unit-watch" ||
+      !log.payload
+    ) {
+      return history;
+    }
+
+    return {
+      ...history,
+      [log.name]: [
+        ...(history[log.name] || []),
+        [log.id, JSON.parse(log.payload)],
+      ],
+    };
+  })
+  .reset(emptyLogs);
+
+// $storeHistory.watch(console.log);
+
+$logIds
+  .on(logRecieved, (logs, log) => {
+    if (!log) {
+      return logs;
+    }
+
+    return [...logs, log.id];
   })
   .reset(emptyLogs);
 

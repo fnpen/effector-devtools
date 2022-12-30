@@ -1,22 +1,24 @@
-import { useStore } from "effector-react";
-import * as React from "react";
-import { $detailsTab, $selected } from "../store/details";
+import React, { useContext } from "react";
+import { TableStateProvider } from "../Table";
+import { DetailsBodyCode } from "./DetailsBodyCode";
 import { DetailsBodyHistory } from "./DetailsBodyHistory";
-import { DetailsBodyPayload } from "./DetailsBodyPayload";
 import { DetailsToolbar } from "./DetailsToolbar";
+import { useTabsState } from "./useTabsState";
 
 export const DetailsBody = () => {
-  const detailsTab = useStore($detailsTab);
+  const { selectedTab } = useTabsState();
 
   return (
     <div className="ed-details-body">
-      {detailsTab === "payload" && <DetailsBodyPayload />}
-      {detailsTab === "history" && <DetailsBodyHistory />}
+      {selectedTab === "preview" && <DetailsBodyCode preview />}
+      {selectedTab === "payload" && <DetailsBodyCode />}
+      {selectedTab === "history" && <DetailsBodyHistory />}
     </div>
   );
 };
 export const Details = () => {
-  const selected = useStore($selected);
+  const { selected } = useContext(TableStateProvider);
+
   return selected ? (
     <div className="ed-details">
       <DetailsToolbar />

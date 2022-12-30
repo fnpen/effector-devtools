@@ -1,28 +1,16 @@
 import clsx from "clsx";
-import { useStore, useStoreMap } from "effector-react";
-import React from "react";
-import { $selected, selectMessage } from "../store/details";
+import { useStoreMap } from "effector-react";
+import React, { useContext } from "react";
 import { $logs } from "../store/logs";
+import { TableStateProvider } from "../Table";
 
-// export const Log = memo(({ index, style }) => {
-//   const id = useStoreMap({
-//     store: $logs,
-//     keys: [index],
-//     fn: (logs, [index]) => logs[index]?.id,
-//   });
-
-//   return typeof id === "number" ? (
-//     <Row id={id} index={index} style={style} />
-//   ) : null;
-// }, isEqual);
-
-export const Row = ({ id, index, style }) => {
-  const selected = useStore($selected);
+export const Row = ({ children: id, "data-index": index }) => {
+  const { selected, setSelected } = useContext(TableStateProvider);
 
   const log = useStoreMap({
     store: $logs,
     keys: [id],
-    fn: (logs, [id]) => logs.find(log => log.id === id),
+    fn: (logs, [id]) => logs[id],
   });
 
   return typeof log?.id === "number" ? (
@@ -31,8 +19,7 @@ export const Row = ({ id, index, style }) => {
         "ed-list-item--odd": index % 2 === 0,
         "ed-list-item--selected": selected === log.id,
       })}
-      style={style}
-      onClick={() => selectMessage(log.id)}
+      onClick={() => setSelected(log.id)}
     >
       <div className={"ed-list-item-icons"} title={log.op}>
         <div
@@ -49,7 +36,7 @@ export const Row = ({ id, index, style }) => {
         ></div>
       </div>
       <div title={log.name}>{log.name}</div>
-      <div title={log.payload}>{log.payload}</div>
+      <div title={log.payload}>{log.payloadShort ?? log.payload}</div>
     </div>
   ) : null;
 };

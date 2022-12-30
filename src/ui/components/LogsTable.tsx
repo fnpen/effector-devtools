@@ -2,7 +2,7 @@ import React from "react";
 import { useMeasure } from "react-use";
 import { LogsBody } from "./LogsBody";
 
-export const Logs = ({ logIds }) => {
+export const LogsTable = () => {
   const [ref, { width, height }] = useMeasure();
 
   return (
@@ -13,7 +13,7 @@ export const Logs = ({ logIds }) => {
         <div>Payload</div>
       </div>
       <div className="ed-table-body" ref={ref}>
-        <LogsBody logIds={logIds} {...{ width, height }} />
+        <LogsBody {...{ width, height }} />
       </div>
     </div>
   );

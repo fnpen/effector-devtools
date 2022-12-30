@@ -1,21 +1,39 @@
 import { useStore } from "effector-react";
-import * as React from "react";
+import React from "react";
 import ReactDOM from "react-dom";
-import { Details } from "./components/Details";
-import { Logs } from "./components/Logs";
 import { LogToolbar } from "./components/LogToolbar";
+import {
+  $detailsTab,
+  $selected,
+  changeTab,
+  selectMessage,
+} from "./store/details";
 import { $logIds } from "./store/logs";
+import { IdsProvider, Table, TableStateProvider } from "./Table";
 
 declare let __CSS__: string;
 document.head.appendChild(document.createElement("style")).append(__CSS__);
 
 const Body = () => {
   const logIds = useStore($logIds);
+  const selected = useStore($selected);
+  const selectedTab = useStore($detailsTab);
 
   return (
     <div className="ed-body">
-      <Logs logIds={logIds} />
-      <Details />
+      <IdsProvider.Provider value={logIds}>
+        <TableStateProvider.Provider
+          value={{
+            selected,
+            setSelected: selectMessage,
+            setSelectedTab: changeTab,
+            selectedTab,
+            showHistory: true,
+          }}
+        >
+          <Table />
+        </TableStateProvider.Provider>
+      </IdsProvider.Provider>
     </div>
   );
 };

@@ -38,7 +38,6 @@ class Controller {
     this.bindRemote();
 
     this.sendState();
-    this.onStateChanged("enabled", this.enabled);
   }
 
   getState() {
@@ -55,13 +54,6 @@ class Controller {
     this.publisher.ns("state").publish(this.getState());
   }, 80);
 
-  onStateChanged(name: string, value: any) {
-    this.publisher.ns("stateChanged").publish({
-      name,
-      value,
-    });
-  }
-
   bindRemote() {
     this.publisher.provide("setEnabled", this.setEnabled.bind(this));
     this.publisher.provide("setFilterQuery", this.setFilterQuery.bind(this));
@@ -75,13 +67,13 @@ class Controller {
 
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
-    this.onStateChanged("enabled", enabled);
 
     const filterFn = filterLogsFn(this.query);
 
     for (let unit of this._events) {
       if (!enabled) {
         unit.logger.setEnabled(false);
+        continue;
       }
 
       unit.logger.setEnabled(filterFn(unit.logger.getName()));

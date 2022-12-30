@@ -1,34 +1,30 @@
 import clsx from "clsx";
-import { useStore } from "effector-react";
 import Times from "line-awesome/svg/times-circle-solid.svg";
-import React from "react";
-import { $detailsTab, changeTab, selectMessage } from "../store/details";
+import React, { useContext } from "react";
+import { TableStateProvider } from "../Table";
 import { Toolbar } from "./Toolbar";
+import { tabs, useTabsState } from "./useTabsState";
 
 export const DetailsToolbar = () => {
-  const detailsTab = useStore($detailsTab);
+  const { setSelected, setSelectedTab } = useContext(TableStateProvider);
+
+  const { availableTabs, selectedTab } = useTabsState();
 
   return (
     <Toolbar>
-      <a className={"ed-btn"} onClick={() => selectMessage(false)}>
+      <a className={"ed-btn"} onClick={() => setSelected(false)}>
         <Times />
       </a>
-      <a
-        className={clsx("ed-tab-header", {
-          "ed-tab-header--selected": detailsTab === "payload",
-        })}
-        onClick={() => changeTab("payload")}
-      >
-        Payload
-      </a>
-      <a
-        className={clsx("ed-tab-header", {
-          "ed-tab-header--selected": detailsTab === "history",
-        })}
-        onClick={() => changeTab("history")}
-      >
-        History
-      </a>
+      {availableTabs.map(tab => (
+        <a
+          className={clsx("ed-tab-header", {
+            "ed-tab-header--selected": selectedTab === tab,
+          })}
+          onClick={() => setSelectedTab(tab)}
+        >
+          {tabs[tab]}
+        </a>
+      ))}
     </Toolbar>
   );
 };

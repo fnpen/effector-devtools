@@ -1,4 +1,5 @@
 @import url("./App.css");
+@import url("highlight.js/styles/github.css");
 
 html,
 body {
