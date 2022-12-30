@@ -1,6 +1,6 @@
 import { useStore } from "effector-react";
 import React, { useState } from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { useHotkeys } from "react-hotkeys-hook";
 import { LogToolbar } from "./components/LogToolbar";
 import {
@@ -75,6 +75,8 @@ const App = () => {
   );
 };
 
-const root = ReactDOM.createRoot(document.body);
+const root = createRoot(
+  document.body.appendChild(document.createElement("div"))
+);
 
 root.render(<App />);

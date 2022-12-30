@@ -70,6 +70,7 @@ export const DetailsToolbar = () => {
       </a>
       {availableTabs.map(tab => (
         <a
+          key={tab}
           className={clsx("ed-tab-header", {
             "ed-tab-header--selected": selectedTab === tab,
           })}

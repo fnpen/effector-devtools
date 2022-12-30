@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { TableStateProvider } from "../../Table";
+import { DetailsBodyDiff } from "./DetailsBodyDiff";
 import { DetailsBodyHistory } from "./DetailsBodyHistory";
 import { DetailsBodyPayload } from "./DetailsBodyPayload";
 import { DetailsBodyPreview } from "./DetailsBodyPreview";
@@ -14,6 +15,7 @@ export const DetailsBody = () => {
       {selectedTab === "preview" && <DetailsBodyPreview />}
       {selectedTab === "payload" && <DetailsBodyPayload />}
       {selectedTab === "history" && <DetailsBodyHistory />}
+      {selectedTab === "diff" && <DetailsBodyDiff />}
     </div>
   );
 };

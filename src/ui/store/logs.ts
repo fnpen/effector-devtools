@@ -22,7 +22,9 @@ sample({
 
 export const $filteredOutLogIds = createStore<number[]>([]);
 export const $logs = createStore<{ [id: number]: Message }>({});
-export const $storeHistory = createStore<{ [unitName: string]: any }>({});
+export const $storeHistory = createStore<{
+  [unitName: string]: Array<[id: number, payload: any]>;
+}>({});
 export const $logIds = createStore<number[]>([]);
 
 const $filtrationResult = sample({

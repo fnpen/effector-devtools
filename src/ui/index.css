@@ -12,4 +12,8 @@ body {
   color: #333;
   background-color: transparent;
   height: 100%;
+
+  & > div {
+    height: 100%;
+  }
 }

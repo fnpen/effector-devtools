@@ -73,14 +73,16 @@ async function buildUi(config, configCSS) {
 async function buildInjector(config) {
   config = config || {};
 
+  const isDev = process.env.NODE_ENV === "development";
+
   const __UI_SRC__ = await buildUi(
     {
-      minify: true,
-      sourcemap: false,
+      minify: !isDev,
+      sourcemap: isDev,
     },
     {
-      minify: true,
-      sourcemap: false,
+      minify: !isDev,
+      sourcemap: isDev,
     }
   );
 
@@ -138,6 +140,8 @@ async function buildBabelPlugin(config) {
 
 if (require.main === module) {
   (async () => {
+    process.env.NODE_ENV = "production";
+
     await buildInjector({ logLevel: "info" });
     await buildBabelPlugin({ logLevel: "info" });
   })();
