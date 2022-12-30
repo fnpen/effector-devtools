@@ -1,10 +1,11 @@
 import { useStore, useStoreMap } from "effector-react";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { $selectedMessage } from "../store/details";
 import { $logs } from "../store/logs";
 import { IdsProvider, Table, TableStateProvider } from "../Table";
 
 export const DetailsBodyHistory = () => {
+  const { setHotkeysActive } = useContext(TableStateProvider);
   const [selected, setSelected] = useState<number | false>(false);
   const [selectedTab, setSelectedTab] = useState<string>("");
   const selectedMessage = useStore($selectedMessage);
@@ -35,6 +36,8 @@ export const DetailsBodyHistory = () => {
             setSelected,
             selectedTab,
             setSelectedTab,
+            hotkeysActive: true,
+            parentSetHotkeysActive: setHotkeysActive,
             showHistory: false,
           }}
         >

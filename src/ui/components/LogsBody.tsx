@@ -1,8 +1,53 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Virtuoso } from "react-virtuoso";
-import { IdsProvider } from "../Table";
+import { IdsProvider, TableStateProvider } from "../Table";
 
 import { Row } from "./Log";
+
+export const TableHotkeys = () => {
+  const { hotkeysActive, setSelected, selected } =
+    useContext(TableStateProvider);
+
+  const ids = useContext(IdsProvider);
+
+  useHotkeys(
+    "up",
+    e => {
+      if (hotkeysActive) {
+        let index =
+          selected === false ? ids.length - 1 : ids.indexOf(selected) - 1;
+
+        if (index < 0) {
+          index = ids.length - 1;
+        }
+
+        setSelected(ids[index]);
+        e.preventDefault();
+      }
+    },
+    [selected, setSelected, hotkeysActive, ids.join("/")] // useHotkeys bug
+  );
+
+  useHotkeys(
+    "down",
+    e => {
+      if (hotkeysActive) {
+        let index = selected === false ? 0 : ids.indexOf(selected) + 1;
+
+        if (index > ids.length - 1) {
+          index = 0;
+        }
+
+        setSelected(ids[index]);
+        e.preventDefault();
+      }
+    },
+    [selected, setSelected, hotkeysActive, ids.join("/")] // useHotkeys bug
+  );
+
+  return null;
+};
 
 export const LogsBody = ({ width, height }) => {
   const appendInterval = useRef(null);
@@ -59,6 +104,7 @@ export const LogsBody = ({ width, height }) => {
           Bottom
         </a>
       )}
+      <TableHotkeys />
     </>
   ) : null;
 };

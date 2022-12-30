@@ -1,9 +1,8 @@
 import { Message } from "common-types";
 import { combine, createEvent, createStore, sample } from "effector";
 import { debounce } from "patronum/debounce";
-import { filterLogsFn } from "../../common/filterLogsFn";
 import { remoteSubscriber } from "../rempl-subscriber";
-import { $filterQuery, changeFilterQuery } from "./state";
+import { $filterQuery, $filterQueryRegexp, changeFilterQuery } from "./state";
 
 export const $filterInputText = createStore<string>("");
 
@@ -16,6 +15,11 @@ debounce({
   target: changeFilterQuery,
 });
 
+sample({
+  source: $filterQuery,
+  target: $filterInputText,
+});
+
 export const $filteredOutLogIds = createStore<number[]>([]);
 export const $logs = createStore<{ [id: number]: Message }>({});
 export const $storeHistory = createStore<{ [unitName: string]: any }>({});
@@ -23,20 +27,20 @@ export const $logIds = createStore<number[]>([]);
 
 const $filtrationResult = sample({
   clock: $filterQuery,
-  source: combine([$logs, $logIds, $filteredOutLogIds, $filterQuery]),
-  fn: ([logs, logIds, filteredOutLogIds, filterQuery]) => {
-    const filterLogs = filterLogsFn(filterQuery);
-
+  source: combine([$logs, $logIds, $filteredOutLogIds, $filterQueryRegexp]),
+  fn: ([logs, logIds, filteredOutLogIds, filterQueryRegexp]) => {
     const passed: number[] = [];
     const notPassed: number[] = [];
 
-    [...logIds, ...filteredOutLogIds].forEach(logId => {
-      if (filterLogs(logs[logId])) {
-        passed.push(logId);
-      } else {
-        notPassed.push(logId);
-      }
-    });
+    Object.values(logs)
+      .map(log => log.id)
+      .forEach(logId => {
+        if (filterQueryRegexp(logs[logId].name)) {
+          passed.push(logId);
+        } else {
+          notPassed.push(logId);
+        }
+      });
 
     return {
       passed,
@@ -59,6 +63,7 @@ sample({
 
 const logRecieved = createEvent<Message>();
 export const emptyLogs = createEvent();
+
 $logs
   .on(logRecieved, (logs, log) => {
     if (!log) {
@@ -71,7 +76,13 @@ $logs
       }
     }
 
-    return { ...logs, [log.id]: log };
+    return {
+      ...logs,
+      [log.id]: {
+        ...log,
+        index: logs.length,
+      },
+    };
   })
   .reset(emptyLogs);
 
@@ -98,15 +109,20 @@ $storeHistory
 
 // $storeHistory.watch(console.log);
 
-$logIds
-  .on(logRecieved, (logs, log) => {
-    if (!log) {
-      return logs;
+sample({
+  clock: logRecieved,
+  source: combine([$logIds, $filterQueryRegexp]),
+  fn: ([logIds, filterQueryRegexp], log) => {
+    if (!log || !filterQueryRegexp(log.name)) {
+      return logIds;
     }
 
-    return [...logs, log.id];
-  })
-  .reset(emptyLogs);
+    return [...logIds, log.id];
+  },
+  target: $logIds,
+});
+
+$logIds.reset(emptyLogs);
 
 remoteSubscriber.subscribe(() => {
   remoteSubscriber.callRemote("isReady");

@@ -1,4 +1,15 @@
 declare module "common-types" {
+  export interface StaticState {
+    enabled: boolean;
+    expanded: boolean;
+    zoom: number;
+    query: string;
+  }
+
+  export interface FullState extends StaticState {
+    subscriptions: string[];
+  }
+
   export interface BaseMessage {
     op: string;
     id: number;

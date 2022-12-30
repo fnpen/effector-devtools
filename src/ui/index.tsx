@@ -1,6 +1,7 @@
 import { useStore } from "effector-react";
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom";
+import { useHotkeys } from "react-hotkeys-hook";
 import { LogToolbar } from "./components/LogToolbar";
 import {
   $detailsTab,
@@ -9,12 +10,14 @@ import {
   selectMessage,
 } from "./store/details";
 import { $logIds } from "./store/logs";
+import { $zoom, setZoom } from "./store/state";
 import { IdsProvider, Table, TableStateProvider } from "./Table";
 
 declare let __CSS__: string;
 document.head.appendChild(document.createElement("style")).append(__CSS__);
 
 const Body = () => {
+  const [hotkeysActive, setHotkeysActive] = useState(true);
   const logIds = useStore($logIds);
   const selected = useStore($selected);
   const selectedTab = useStore($detailsTab);
@@ -28,6 +31,8 @@ const Body = () => {
             setSelected: selectMessage,
             setSelectedTab: changeTab,
             selectedTab,
+            hotkeysActive,
+            setHotkeysActive,
             showHistory: true,
           }}
         >
@@ -39,8 +44,31 @@ const Body = () => {
 };
 
 const App = () => {
+  const zoom = useStore($zoom);
+
+  useHotkeys(
+    "meta+p",
+    () => {
+      setZoom(zoom + 0.1);
+    },
+    {
+      preventDefault: true,
+    },
+    [zoom, setZoom]
+  );
+  useHotkeys(
+    "meta+o",
+    () => {
+      setZoom(zoom - 0.1);
+    },
+    {
+      preventDefault: true,
+    },
+    [zoom, setZoom]
+  );
+
   return (
-    <div className="ed-layout">
+    <div className="ed-layout" style={{ zoom }}>
       <LogToolbar />
       <Body />
     </div>

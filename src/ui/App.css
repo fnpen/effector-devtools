@@ -132,6 +132,7 @@
         flex: 1;
         border: 1px solid #d1d1d1;
         border-top: none;
+        border-left: none;
         padding: 4px;
         text-overflow: ellipsis;
         overflow: hidden;
@@ -255,9 +256,40 @@
         height: 100%;
       }
 
+      & .ed-details-body-corner-btns {
+        position: absolute;
+        right: 14px;
+        top: 40px;
+
+        & .ed-details-body-corner-btn {
+          cursor: pointer;
+
+          opacity: 0.5;
+          transition: 0.2s opacity;
+          display: flex;
+          align-items: center;
+
+          &:hover {
+            opacity: 1;
+          }
+
+          & svg {
+            width: 24px;
+            height: 24px;
+            margin-right: 3px;
+          }
+        }
+      }
+
+      & .ed-details-body-preview {
+        padding: 14px !important;
+      }
+
       & .ed-details-body-code {
+        padding: 14px !important;
+
         & pre {
-          padding: 14px !important;
+          padding: 0px !important;
           margin: 0px;
         }
 

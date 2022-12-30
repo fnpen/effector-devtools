@@ -5,6 +5,7 @@ import json from "highlight.js/lib/languages/json";
 import React, { useContext, useEffect, useState, useTransition } from "react";
 import { $logs } from "../store/logs";
 import { TableStateProvider } from "../Table";
+import { NoData } from "./NoData";
 
 hlsl.registerLanguage("json", json);
 
@@ -35,7 +36,7 @@ export const Json = ({ data, indent }) => {
   );
 };
 
-export const DetailsBodyCode = ({ preview }) => {
+export const DetailsBodyPayload = ({ preview = false }) => {
   const { selected } = useContext(TableStateProvider);
 
   const log = useStoreMap({
@@ -50,7 +51,7 @@ export const DetailsBodyCode = ({ preview }) => {
         "ed-details-body-code-raw": !preview,
       })}
     >
-      {log.payload && <Json data={log.payload} indent={preview} />}
+      {log.payload ? <Json data={log.payload} indent={preview} /> : <NoData />}
     </div>
   ) : null;
 };

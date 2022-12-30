@@ -1,3 +1,4 @@
+import { State } from "common-types";
 import {
   createEffect as createEffectOrig,
   createEvent as createEventOrig,
@@ -9,12 +10,23 @@ import {
   Unit,
 } from "effector";
 import debounce from "lodash.debounce";
+import { defaultState } from "../common/constants";
 
 import { filterLogsFn } from "../common/filterLogsFn";
 import { setConfig } from "./config";
 
 import type { Publisher } from "./rempl-publisher";
 import { publisher, publishLog } from "./rempl-publisher";
+
+const localData = ((): Partial<State> => {
+  let data = {} as State;
+  try {
+    data = JSON.parse(window.localStorage.getItem("effector-devtools") || "{}");
+  } catch (e) {
+    console.log("localData parsing issue.");
+  }
+  return data;
+})();
 
 type Loggable = {
   enabled: boolean;
@@ -28,13 +40,21 @@ type Loggable = {
 
 class Controller {
   publisher: Publisher;
-  enabled: boolean = true;
-  query: string = "";
+
+  state: State;
 
   _events: Set<{ logger: Loggable }> = new Set();
 
   constructor(publisher: Publisher) {
+    this.state = {
+      ...defaultState,
+      ...localData,
+    };
+
+    console.log("initial", this.state);
+
     this.publisher = publisher;
+
     this.bindRemote();
 
     this.sendState();
@@ -42,8 +62,7 @@ class Controller {
 
   getState() {
     return {
-      enabled: this.enabled,
-      query: this.query,
+      ...this.state,
       subscriptions: Array.from(this._events.values())
         .filter(unit => unit.logger.enabled)
         .map(unit => unit.logger.getName()),
@@ -52,23 +71,39 @@ class Controller {
 
   sendState = debounce(() => {
     this.publisher.ns("state").publish(this.getState());
+    window.localStorage.setItem(
+      "effector-devtools",
+      JSON.stringify(this.state)
+    );
   }, 80);
 
   bindRemote() {
+    this.publisher.provide("setZoom", this.setZoom.bind(this));
     this.publisher.provide("setEnabled", this.setEnabled.bind(this));
     this.publisher.provide("setFilterQuery", this.setFilterQuery.bind(this));
   }
 
   setFilterQuery(query: string) {
-    this.query = query;
+    if (this.state.query === query) {
+      return;
+    }
 
-    this.setEnabled(this.enabled);
+    this.state.query = query;
+
+    this.setEnabled(this.state.enabled);
+
+    this.sendState();
+  }
+
+  setZoom(zoom: number) {
+    this.state.zoom = zoom;
+    this.sendState();
   }
 
   setEnabled(enabled: boolean) {
-    this.enabled = enabled;
+    this.state.enabled = enabled;
 
-    const filterFn = filterLogsFn(this.query);
+    const filterFn = filterLogsFn(this.state.query);
 
     for (let unit of this._events) {
       if (!enabled) {
@@ -83,7 +118,7 @@ class Controller {
   onUnitCreate(unit: { logger: Loggable }) {
     this._events.add(unit);
 
-    if (this.enabled) {
+    if (this.state.enabled) {
       unit.logger.setEnabled(true);
     }
 
