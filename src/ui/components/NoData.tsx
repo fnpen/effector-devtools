@@ -1,5 +1,5 @@
 import React from "react";
 
-export const NoData = () => {
-  return <i>No Data</i>;
+export const NoData = ({ text = "" }) => {
+  return <i>{text || "No Data"}</i>;
 };

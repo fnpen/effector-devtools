@@ -107,10 +107,6 @@ class Controller {
   }
 
   #setEnabled(enabled: boolean) {
-    if (enabled === this.state.enabled) {
-      return;
-    }
-
     this.state.enabled = enabled;
 
     const filterFn = filterLogsFn(this.state.query);
@@ -208,6 +204,19 @@ const attachLogger = <T>(unit: Unit<T>, parent?: Unit<T>) => {
 
 const createStore: typeof createStoreOrig = <T>(...args: any) => {
   const event = createStoreOrig(...args) as Loggable & Store<T>;
+
+  const mapOrig = event.map;
+  event.map = (fn, dataFromBabel) => {
+    const store = mapOrig(fn);
+
+    if (dataFromBabel?.name) {
+      store.shortName = dataFromBabel.name;
+    }
+
+    attachLogger(store);
+
+    return store;
+  };
 
   attachLogger(event);
 

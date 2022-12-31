@@ -3,6 +3,8 @@ import { useStoreMap } from "effector-react";
 import hlsl from "highlight.js/lib/core";
 import json from "highlight.js/lib/languages/json";
 import React, { useContext, useEffect, useState, useTransition } from "react";
+import { useAsync } from "react-use";
+import { parseJson } from "../../../common/parseJson";
 import { $logs } from "../../store/logs";
 import { TableStateProvider } from "../../Table";
 import { NoData } from "./../NoData";
@@ -18,13 +20,24 @@ export const Json = ({ data, indent }) => {
 
   const [isPending, startTransition] = useTransition();
 
+  const content = useAsync(
+    async () =>
+      indent ? JSON.stringify(await parseJson(data), null, 2) : data,
+    [data, indent]
+  );
+
   useEffect(() => {
     startTransition(() => {
-      const content = indent ? JSON.stringify(JSON.parse(data), null, 2) : data;
-      const __html = hlsl.highlight(content, { language: "json" }).value;
-      setHtml(__html);
+      if (!content.loading) {
+        const __html = hlsl.highlight(content.value, {
+          language: "json",
+        }).value;
+        setHtml(__html);
+      } else {
+        setHtml("");
+      }
     });
-  }, [data]);
+  }, [content]);
 
   return (
     <div>

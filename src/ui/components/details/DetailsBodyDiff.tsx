@@ -6,6 +6,9 @@ import { TableStateProvider } from "../../Table";
 
 import { detailedDiff } from "deep-object-diff";
 import { flatten } from "flat";
+import { useAsync } from "react-use";
+import { parseJson } from "../../../common/parseJson";
+import { NoData } from "../NoData";
 import { Json } from "./Json";
 
 export const DetailsBodyDiff = () => {
@@ -17,9 +20,7 @@ export const DetailsBodyDiff = () => {
     fn: (logs, [id]) => logs[id],
   });
 
-  const current = log.payload ? JSON.parse(log.payload) : undefined;
-
-  const prev = useStoreMap({
+  const prevJson = useStoreMap({
     store: $storeHistory,
     keys: [log],
     fn: (storeHistory, [log]) => {
@@ -35,8 +36,15 @@ export const DetailsBodyDiff = () => {
     },
   });
 
+  const current = useAsync(() => parseJson(log?.payload), [log]);
+  const prev = useAsync(() => parseJson(prevJson), [prevJson]);
+
+  if (current?.loading || prev?.loading) {
+    return <NoData text="Loading" />;
+  }
+
   // const changes = detailedDiff(prev ? { data: prev } : {}, { data: current });
-  const changes = detailedDiff(prev, current);
+  const changes = detailedDiff(prev.value, current.value);
 
   const result: any = {};
 

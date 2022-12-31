@@ -101,10 +101,7 @@ $storeHistory
 
     return {
       ...history,
-      [log.name]: [
-        ...(history[log.name] || []),
-        [log.id, JSON.parse(log.payload)],
-      ],
+      [log.name]: [...(history[log.name] || []), [log.id, log.payload]],
     };
   })
   .reset(emptyLogs);
