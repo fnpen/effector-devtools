@@ -80,14 +80,19 @@ export const LogsBody = ({ width, height }) => {
         ref={virtuosoRef}
         style={{ height, width }}
         data={ids}
-        defaultItemHeight={24}
+        defaultItemHeight={23}
         initialTopMostItemIndex={999}
         overscan={30}
         atBottomStateChange={bottom => {
           clearInterval(appendInterval.current);
           setAtBottom(bottom);
         }}
-        components={{ Item: Row }}
+        components={{
+          Item: Row,
+          Footer: () => {
+            return <div className="ed-footer-space" />;
+          },
+        }}
         itemContent={(_, id) => id}
         followOutput={"auto"}
       />

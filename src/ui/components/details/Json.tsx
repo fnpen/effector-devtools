@@ -66,20 +66,17 @@ export const Json = ({ data = null, expanded = true, hideRoot = true }) => {
             return <strong>{text}: </strong>;
           }}
           sortObjectKeys={(a, b) => {
-            if (a === "error") {
-              return -100;
-            }
-            if (a === "message") {
-              return -70;
-            }
-            if (a === "result") {
-              return -50;
-            }
-            if (a === "params") {
-              return -10;
-            }
-            // console.log({ a, b });
-            return 0;
+            const ranks = {
+              error: 100,
+              message: 70,
+              result: 50,
+              params: 10,
+              // added: 12,
+              // updated: 11,
+              // removed: 10,
+            };
+
+            return ranks?.[b] - ranks?.[a];
           }}
         />
       ) : (

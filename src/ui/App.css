@@ -125,6 +125,10 @@
     height: 100%;
     flex: 1;
 
+    & .ed-footer-space {
+      height: 23px;
+    }
+
     & .ed-table-header {
       display: flex;
 
@@ -153,6 +157,7 @@
       flex: 1;
 
       & .ed-list-item {
+        height: 23px;
         display: flex;
         overflow: hidden;
         white-space: nowrap;
@@ -160,7 +165,7 @@
         cursor: pointer;
 
         &.ed-list-item--odd {
-          background-color: #f5f5f5;
+          background-color: hsl(0deg 0% 99%);
         }
         &:hover {
           background-color: #e6e5e5;
@@ -206,6 +211,7 @@
         }
 
         & > div {
+          display: flex;
           box-sizing: border-box;
           flex: 1;
           border: 1px solid transparent;
@@ -223,6 +229,18 @@
           &:nth-child(2) {
             flex: none;
             width: 140px;
+          }
+        }
+
+        & .ed-list-item-payload {
+          padding: 0;
+          display: flex;
+
+          & > * {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 4px;
           }
         }
       }

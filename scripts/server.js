@@ -5,11 +5,11 @@ const path = require("path");
 
 process.env.NODE_ENV = "development";
 
-const { basePath, buildInjector, buildBabelPlugin } = require("./build");
+const { basePath, buildBabelPlugin, buildMain } = require("./build");
 
-const doInjector = () => buildInjector({ logLevel: "info", write: true });
+const doMain = () => buildMain({ logLevel: "info", write: true });
 const doBabelPlugin = () => buildBabelPlugin({ logLevel: "info", write: true });
-const tasks = () => Promise.all([doInjector(), doBabelPlugin()]);
+const tasks = () => Promise.all([doMain(), doBabelPlugin()]);
 
 chokidar
   .watch(path.join(basePath, "src/"), {

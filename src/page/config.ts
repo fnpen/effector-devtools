@@ -2,9 +2,8 @@ import { getHost } from "rempl";
 
 let config: { inPage?: boolean } = {};
 
-const setConfig = (c: typeof config) => {
-  console.log('setConfig', c)
-  config = {...config, ...c};
+const loggerSettings = (c: typeof config) => {
+  config = { ...config, ...c };
 
   if (config.inPage) {
     getHost().activate();
@@ -13,7 +12,4 @@ const setConfig = (c: typeof config) => {
   }
 };
 
-export {
-  config,
-  setConfig
-};
+export { config, loggerSettings };

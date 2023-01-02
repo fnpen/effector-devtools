@@ -8,8 +8,8 @@ const postcssPresetEnv = require("postcss-preset-env");
 
 module.exports = {
   basePath,
-  buildInjector,
   buildBabelPlugin,
+  buildMain,
 };
 
 async function buildUi(config, configCSS) {
@@ -70,7 +70,7 @@ async function buildUi(config, configCSS) {
   }
 }
 
-async function buildInjector(config) {
+async function buildMain(config) {
   config = config || {};
 
   const isDev = process.env.NODE_ENV === "development";
@@ -86,8 +86,8 @@ async function buildInjector(config) {
     }
   );
 
-  await esbuild.build({
-    entryPoints: [path.join(basePath, "src/injector/index.ts")],
+  config = {
+    entryPoints: [path.join(basePath, "src/devtools.ts")],
     bundle: true,
     sourcemap: true,
     external: ["effector"],
@@ -95,14 +95,28 @@ async function buildInjector(config) {
     target: "es2015",
     platform: "browser",
     write: true,
-    outfile: path.join(basePath, "dist/effector-injector.mjs"),
     ...config,
     define: {
       __DEV__: false,
       __UI_SRC__: JSON.stringify(__UI_SRC__),
       ...(config && config.define),
     },
-  });
+  };
+
+  await Promise.all(
+    [
+      {
+        ...config,
+        format: "esm",
+        outfile: path.join(basePath, "dist/devtools.mjs"),
+      },
+      {
+        ...config,
+        format: "cjs",
+        outfile: path.join(basePath, "dist/devtools.js"),
+      },
+    ].map(c => esbuild.build(c))
+  );
 }
 
 async function buildBabelPlugin(config) {
@@ -142,7 +156,7 @@ if (require.main === module) {
   (async () => {
     process.env.NODE_ENV = "production";
 
-    await buildInjector({ logLevel: "info" });
+    await buildMain({ logLevel: "info" });
     await buildBabelPlugin({ logLevel: "info" });
   })();
 }

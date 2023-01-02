@@ -4,7 +4,7 @@ import { declare } from "@babel/helper-plugin-utils";
 // import type { NodePath } from "@babel/traverse";
 import { NodePath, PluginPass, types as t } from "@babel/core";
 import effectorPlugin from "effector/babel-plugin";
-
+import { normalize, sep } from "path";
 const replaceToDevtools = ["effector"];
 
 export interface Options {
@@ -49,7 +49,6 @@ function makeTrace(fileNameIdentifier, lineNumber, columnNumber, t) {
 }
 
 function stripRoot(babelRoot, fileName, omitFirstSlash) {
-  const { sep, normalize } = require("path");
   const rawPath = fileName.replace(babelRoot, "");
   let normalizedSeq = normalize(rawPath).split(sep);
   if (omitFirstSlash && normalizedSeq.length > 0 && normalizedSeq[0] === "") {
@@ -151,7 +150,7 @@ export default declare((api, options: Options = {}) => {
     ImportDeclaration(path: NodePath<t.ImportDeclaration>, state: PluginPass) {
       if (t.isLiteral(path.node.source)) {
         if (replaceToDevtools.includes(path.node.source.value)) {
-          path.node.source.value = "@fnpen/effector-devtools/injector";
+          path.node.source.value = "@fnpen/effector-devtools";
         }
       }
     },
