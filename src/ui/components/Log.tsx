@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import { ToolsMessage } from "common-types";
 import { detailedDiff } from "deep-object-diff";
 import { useStoreMap } from "effector-react";
 import memoize from "fast-memoize";
@@ -15,6 +14,7 @@ import { colorizeJson, colorizeJsonString } from "../../common/colorizeJson";
 import { parseJson } from "../../common/parseJson";
 import { $logs, $storeHistory } from "../store/logs";
 import { TableStateProvider } from "../Table";
+import { ToolsMessage } from "./../../common/types";
 import { getPrevHistoryJson } from "./details/DetailsBodyDiff";
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;

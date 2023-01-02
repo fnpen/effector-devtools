@@ -1,5 +1,5 @@
-import { ToolsMessage } from "common-types";
 import { useStore, useStoreMap } from "effector-react";
+import { ToolsMessage } from "./../../../common/types";
 
 import React, { useContext, useEffect, useState } from "react";
 import { $selectedMessage } from "../../store/details";

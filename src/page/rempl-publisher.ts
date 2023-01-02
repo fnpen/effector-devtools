@@ -1,12 +1,9 @@
-import { Message } from "common-types";
 import { createPublisher } from "rempl";
 import { ToolId } from "../common/constants";
+import { Message } from "./../common/types";
 
 let eventIdSeed = 0;
 
-// const events: Message[] = [];
-
-declare let __DEV__: boolean;
 declare let __UI_SRC__: string;
 
 export const publisher = createPublisher(ToolId, () => ({

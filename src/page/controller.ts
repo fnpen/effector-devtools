@@ -1,11 +1,17 @@
-import { StaticState } from "common-types";
+import type {
+  AnyUnit,
+  AttachLoggerConfig,
+  Loggable,
+  LoggableUnit,
+  StaticState,
+} from "./../common/types";
+
 import { is, Unit } from "effector";
 import debounce from "lodash.debounce";
 import { defaultState } from "../common/constants";
 import { filterLogsFn } from "../common/filterLogsFn";
 
 import { publisher, publishLog } from "./rempl-publisher";
-import { Loggable } from "./types";
 
 const localData = ((): Partial<StaticState> => {
   let data = {} as StaticState;
@@ -22,7 +28,11 @@ let state = {
   ...localData,
 };
 
-const units: Set<{ logger: Loggable }> = new Set();
+const saveState = debounce(() => {
+  window.localStorage.setItem("effector-devtools", JSON.stringify(state));
+}, 80);
+
+const units: Set<LoggableUnit<any>> = new Set();
 
 function getState() {
   return {
@@ -39,20 +49,19 @@ const sendState = debounce(() => {
 
 sendState();
 
-const saveState = debounce(() => {
-  window.localStorage.setItem("effector-devtools", JSON.stringify(state));
-}, 80);
+function setState(newState: StaticState) {
+  state.enabled = newState.enabled;
 
-function setState(state: StaticState) {
-  setEnabled(state.enabled);
-  setFilterQuery(state.query);
+  setFilterQuery(newState.query);
 
-  state.zoom = state.zoom;
-  state.expanded = !!state.expanded;
+  state.zoom = newState.zoom;
+  state.expanded = !!newState.expanded;
 
   saveState();
+  refreshSubscriptions();
 }
-publisher.provide("setState", setState);
+
+publisher.ns("state").provide({ setState });
 
 function setFilterQuery(query: string) {
   if (state.query === query) {
@@ -61,18 +70,16 @@ function setFilterQuery(query: string) {
 
   state.query = query;
 
-  setEnabled(state.enabled);
+  refreshSubscriptions();
 
   sendState();
 }
 
-function setEnabled(enabled: boolean) {
-  state.enabled = enabled;
-
+function refreshSubscriptions() {
   const filterFn = filterLogsFn(state.query);
 
   for (let unit of units) {
-    if (!enabled) {
+    if (!state.enabled) {
       unit.logger.setEnabled(false);
       continue;
     }
@@ -81,7 +88,7 @@ function setEnabled(enabled: boolean) {
   }
 }
 
-export function onUnitCreate(unit: { logger: Loggable }) {
+export function onUnitCreate<T>(unit: LoggableUnit<T>) {
   units.add(unit);
 
   if (state.enabled) {
@@ -102,25 +109,36 @@ export function onUnitCreate(unit: { logger: Loggable }) {
   sendState();
 }
 
-export function createLogger<T>(unit: Unit<T>, parent?: Unit<T>) {
+export function createLogger<T>(
+  unit: AnyUnit<T>,
+  config: AttachLoggerConfig = {}
+) {
+  config = config || {};
+
   const logger: Loggable = {
     enabled: false,
+
     getName: () => {
-      return (
-        (parent ? (parent as any).shortName + "." : "") +
-        (unit as any).shortName
-      );
+      let name = config.name || unit.compositeName.fullName;
+
+      if (config.prefix) {
+        name = config.prefix + name;
+      }
+
+      return name;
     },
-    getKind: () => (parent ? parent : unit).kind,
-    setEnabled: enabled => {
+
+    getKind: () => config.kind ?? unit.kind,
+
+    setEnabled: (enabled: boolean) => {
       if (enabled === logger.enabled) {
         return;
       }
 
       if (enabled) {
         if (!logger.enabled) {
-          const unwatch = unit.watch(payload => {
-            unit.logger.log("unit-watch", payload);
+          const unwatch = unit.watch((payload: any) => {
+            logger.log("unit-watch", payload);
           });
 
           logger.unwatch = unwatch;
@@ -133,6 +151,7 @@ export function createLogger<T>(unit: Unit<T>, parent?: Unit<T>) {
 
       sendState();
     },
+
     log: (op: string, payload?: any) => {
       publishLog({
         op,
@@ -146,15 +165,40 @@ export function createLogger<T>(unit: Unit<T>, parent?: Unit<T>) {
   return logger;
 }
 
-export const loggerAttach = <T>(unit: Unit<T>, parent?: Unit<T>) => {
-  if (is.domain(unit)) {
-    unit.onCreateEvent(loggerAttach);
-    unit.onCreateEffect(loggerAttach);
-    unit.onCreateStore(loggerAttach);
-    unit.onCreateDomain(loggerAttach);
-  } else {
-    (unit as any).logger = createLogger(unit, parent);
+export const attachLogger = <T>(
+  unit: Unit<T>,
+  config: AttachLoggerConfig = {}
+) => {
+  config = config || {};
 
-    onUnitCreate(unit);
+  if (typeof config !== "object") {
+    config = {};
+  }
+
+  if (is.domain(unit)) {
+    unit.onCreateEvent(attachLogger);
+    unit.onCreateEffect(attachLogger);
+    unit.onCreateStore(attachLogger);
+    unit.onCreateDomain(attachLogger);
+  } else {
+    const logger = createLogger(unit, config);
+    const unitWithLogger = unit as any as LoggableUnit<typeof unit>;
+
+    unitWithLogger.logger = logger;
+
+    onUnitCreate(unitWithLogger);
+
+    if (is.effect(unit)) {
+      attachLogger(unit.done, {
+        ...config,
+        kind: "effect",
+        prefix: unitWithLogger.logger.getName() + ".",
+      });
+      attachLogger(unit.fail, {
+        ...config,
+        kind: "effect",
+        prefix: unitWithLogger.logger.getName() + ".",
+      });
+    }
   }
 };

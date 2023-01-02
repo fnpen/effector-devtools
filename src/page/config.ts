@@ -12,4 +12,4 @@ const loggerSettings = (c: typeof config) => {
   }
 };
 
-export { config, loggerSettings };
+export { config, loggerSettings as setupLogger };

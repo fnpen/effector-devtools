@@ -45,10 +45,10 @@ const colors = {
   NULL_LITERAL: "#0550ae",
 };
 
-const colorFn = (type: string, v: string): string =>
+const colorFn = (type: keyof typeof colors, v: string): string =>
   colors[type] ? `<span style="color:${colors[type]}">${v}</span>` : v;
 
-function colorize(tokens) {
+function colorize(tokens: any[]) {
   return tokens.reduce((acc, token) => {
     if (token.type === "STRING_KEY") {
       token.value = " " + token.value.replace(/["]/g, "");

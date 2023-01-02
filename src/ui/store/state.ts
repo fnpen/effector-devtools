@@ -1,8 +1,8 @@
-import { FullState } from "common-types";
 import { createEvent, createStore } from "effector";
 import { defaultState } from "../../common/constants";
 import { filterLogsFn } from "../../common/filterLogsFn";
 import { remoteSubscriber } from "../rempl-subscriber";
+import { FullState } from "./../../common/types";
 
 // const localData = ((): Partial<State> => {
 //   let data = {} as State;
@@ -44,7 +44,7 @@ $state.on(toogleEnable, state => ({ ...state, enabled: !state.enabled }));
 $state.on(setZoom, (state, zoom) => ({ ...state, zoom }));
 
 $state.watch(({ subscriptions, ...state }) => {
-  remoteSubscriber.callRemote("setState", state);
+  remoteSubscriber.ns("state").callRemote("setState", state);
 });
 
 remoteSubscriber.ns("state").subscribe(changeState);

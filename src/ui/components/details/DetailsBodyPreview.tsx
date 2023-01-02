@@ -1,4 +1,3 @@
-import { ToolsMessage } from "common-types";
 import { useStore, useStoreMap } from "effector-react";
 import Minus from "line-awesome/svg/minus-square-solid.svg";
 import Plus from "line-awesome/svg/plus-square-solid.svg";
@@ -6,6 +5,7 @@ import React, { useContext } from "react";
 import { $logs } from "../../store/logs";
 import { $expanded, setExpanded } from "../../store/state";
 import { TableStateProvider } from "../../Table";
+import { ToolsMessage } from "./../../../common/types";
 import { Json } from "./Json";
 
 export const DetailsBodyPreview = () => {

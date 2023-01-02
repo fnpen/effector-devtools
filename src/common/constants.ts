@@ -1,12 +1,6 @@
-import { StaticState } from "common-types";
+import { StaticState } from "./types";
 
 export const ToolId = "☄️ Effector";
-
-// export const UnitTypeEvent: UnitType = 1;
-
-// export const unitTypeName: Record<UnitType, string> = {
-//   [UnitTypeEvent]: "Event",
-// };
 
 export const defaultState: StaticState = {
   enabled: false,

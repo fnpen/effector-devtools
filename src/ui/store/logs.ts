@@ -1,6 +1,6 @@
-import { Message } from "common-types";
 import { combine, createEvent, createStore, sample } from "effector";
 import { debounce } from "patronum/debounce";
+import { Message } from "../../common/types";
 import { remoteSubscriber } from "../rempl-subscriber";
 import { $filterQuery, $filterQueryRegexp, changeFilterQuery } from "./state";
 
@@ -123,7 +123,5 @@ sample({
 
 $logIds.reset(emptyLogs);
 
-remoteSubscriber.subscribe(() => {
-  remoteSubscriber.callRemote("isReady");
-});
+remoteSubscriber.subscribe(() => remoteSubscriber.callRemote("isReady"));
 remoteSubscriber.ns("logs").subscribe(logRecieved);

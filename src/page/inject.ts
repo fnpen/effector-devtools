@@ -6,7 +6,7 @@ import {
   Event,
   Store,
 } from "effector";
-import { loggerAttach } from "./controller";
+import { attachLogger } from "./controller";
 import { Loggable } from "./types";
 
 const createStore: typeof createStoreOrig = <T>(...args: any) => {
@@ -22,28 +22,28 @@ const createStore: typeof createStoreOrig = <T>(...args: any) => {
         : dataFromBabel.name;
     }
 
-    loggerAttach(store);
+    attachLogger(store);
 
     return store;
   };
 
-  loggerAttach(event);
+  attachLogger(event);
 
   return event;
 };
 const createEvent: typeof createEventOrig = <T>(...args: any) => {
   const event = createEventOrig(...args) as Loggable & Event<T>;
 
-  loggerAttach(event);
+  attachLogger(event);
 
   return event;
 };
 const createEffect: typeof createEffectOrig = <T, A>(...args: any) => {
   const effect = createEffectOrig(...args) as Loggable & Effect<T, A>;
 
-  loggerAttach(effect);
-  loggerAttach(effect.done, effect);
-  loggerAttach(effect.fail, effect);
+  attachLogger(effect);
+  attachLogger(effect.done, effect);
+  attachLogger(effect.fail, effect);
   // attachLogger(effect.finally, effect);
   return effect;
 };

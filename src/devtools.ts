@@ -1,4 +1,4 @@
 export * from "effector";
-export { loggerSettings } from "./page/config";
-export { loggerAttach } from "./page/controller";
+export { setupLogger } from "./page/config";
+export { attachLogger } from "./page/controller";
 export { createEffect, createEvent, createStore } from "./page/inject";
