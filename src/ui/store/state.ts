@@ -48,3 +48,12 @@ $state.watch(({ subscriptions, ...state }) => {
 });
 
 remoteSubscriber.ns("state").subscribe(changeState);
+
+remoteSubscriber.ns("keyboard").subscribe((state: any) => {
+  if (!state) {
+    return;
+  }
+
+  document.dispatchEvent(new KeyboardEvent("keydown", state));
+  document.dispatchEvent(new KeyboardEvent("keyup", state));
+});

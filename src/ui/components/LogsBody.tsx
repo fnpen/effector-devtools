@@ -1,72 +1,117 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import isEqual from "react-fast-compare";
 import { useHotkeys } from "react-hotkeys-hook";
-import { Virtuoso } from "react-virtuoso";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { IdsProvider, TableStateProvider } from "../Table";
 
 import { Row } from "./Log";
 
-export const TableHotkeys = () => {
-  const { hotkeysActive, setSelected, selected } =
-    useContext(TableStateProvider);
+export const TableHotkeys = memo(() => {
+  const { setSelected, selected } = useContext(TableStateProvider);
 
   const ids = useContext(IdsProvider);
+
+  const nextId = useMemo(() => {
+    let index = selected === false ? 0 : ids.indexOf(selected) - 1;
+    // let index = selected === false ? ids.length - 1 : ids.indexOf(selected) - 1;
+
+    if (index < 0) {
+      index = ids.length - 1;
+    }
+
+    return ids[index];
+  }, [ids, selected]);
+
+  const prevId = useMemo(() => {
+    let index = selected === false ? 0 : ids.indexOf(selected) + 1;
+
+    if (index > ids.length - 1) {
+      index = 0;
+    }
+
+    return ids[index];
+  }, [ids, selected]);
+
+  const next = useCallback(() => {
+    setSelected(nextId);
+  }, [setSelected, nextId]);
+
+  const prev = useCallback(() => {
+    setSelected(prevId);
+  }, [setSelected, prevId]);
+
+  return <TableHotkeysInner prev={prev} next={next} />;
+});
+
+export const TableHotkeysInner = memo(({ next, prev }) => {
+  const { hotkeysActive } = useContext(TableStateProvider);
 
   useHotkeys(
     "up",
     e => {
       if (hotkeysActive) {
-        let index =
-          selected === false ? ids.length - 1 : ids.indexOf(selected) - 1;
-
-        if (index < 0) {
-          index = ids.length - 1;
-        }
-
-        setSelected(ids[index]);
+        next();
         e.preventDefault();
       }
     },
-    [selected, setSelected, hotkeysActive, ids.join("/")] // useHotkeys bug
+    [next, hotkeysActive]
   );
 
   useHotkeys(
     "down",
     e => {
       if (hotkeysActive) {
-        let index = selected === false ? 0 : ids.indexOf(selected) + 1;
-
-        if (index > ids.length - 1) {
-          index = 0;
-        }
-
-        setSelected(ids[index]);
+        prev();
         e.preventDefault();
       }
     },
-    [selected, setSelected, hotkeysActive, ids.join("/")] // useHotkeys bug
+    [prev, hotkeysActive]
   );
 
   return null;
+});
+
+export const ScrollTo = ({ scrollToIndex }) => {
+  const { selected } = useContext(TableStateProvider);
+
+  useEffect(() => {
+    if (selected === false) {
+      return;
+    }
+    scrollToIndex(selected);
+  }, [selected, scrollToIndex]);
 };
 
-export const LogsBody = ({ width, height }) => {
+const itemContent = (_, id) => id;
+
+export const LogsBody = memo(({ width, height }) => {
   const appendInterval = useRef(null);
-  const virtuosoRef = useRef(null);
+  const virtuosoRef = useRef<VirtuosoHandle>();
   const [atBottom, setAtBottom] = useState(false);
-  const showButtonTimeoutRef = useRef(null);
+  const showButtonTimeoutRef = useRef<NodeJS.Timeout>();
   const [showButton, setShowButton] = useState(false);
 
   const ids = useContext(IdsProvider);
 
   useEffect(() => {
     return () => {
-      clearInterval(appendInterval.current);
-      clearTimeout(showButtonTimeoutRef.current);
+      if (appendInterval.current) clearInterval(appendInterval.current);
+      if (showButtonTimeoutRef.current)
+        clearTimeout(showButtonTimeoutRef.current);
     };
   }, []);
 
   useEffect(() => {
-    clearTimeout(showButtonTimeoutRef.current);
+    if (showButtonTimeoutRef.current)
+      clearTimeout(showButtonTimeoutRef.current);
     if (!atBottom) {
       showButtonTimeoutRef.current = setTimeout(() => setShowButton(true), 500);
     } else {
@@ -74,17 +119,37 @@ export const LogsBody = ({ width, height }) => {
     }
   }, [atBottom, setShowButton]);
 
+  const { selected } = useContext(TableStateProvider);
+
+  const followOutput = useCallback(
+    (isAtBottom: boolean) => {
+      return selected === false && isAtBottom ? "auto" : false;
+    },
+    [selected]
+  );
+
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      virtuosoRef?.current?.scrollToIndex({
+        index,
+        align: "center",
+        behavior: "smooth",
+      });
+    },
+    [virtuosoRef]
+  );
+
   return height > 0 && width > 0 && ids.length ? (
     <>
+      <ScrollTo scrollToIndex={scrollToIndex} />
       <Virtuoso
         ref={virtuosoRef}
         style={{ height, width }}
         data={ids}
         defaultItemHeight={23}
-        initialTopMostItemIndex={999}
         overscan={30}
         atBottomStateChange={bottom => {
-          clearInterval(appendInterval.current);
+          if (appendInterval.current) clearInterval(appendInterval.current);
           setAtBottom(bottom);
         }}
         components={{
@@ -93,8 +158,8 @@ export const LogsBody = ({ width, height }) => {
             return <div className="ed-footer-space" />;
           },
         }}
-        itemContent={(_, id) => id}
-        followOutput={"auto"}
+        itemContent={itemContent}
+        followOutput={followOutput}
       />
       {showButton && (
         <a
@@ -112,4 +177,4 @@ export const LogsBody = ({ width, height }) => {
       <TableHotkeys />
     </>
   ) : null;
-};
+}, isEqual);

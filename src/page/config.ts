@@ -1,6 +1,9 @@
 import { getHost } from "rempl";
 
-let config: { inPage?: boolean } = {};
+let config: { inPage?: boolean; routeKeyboard?: boolean } = {
+  routeKeyboard: true,
+  inPage: false,
+};
 
 const loggerSettings = (c: typeof config) => {
   config = { ...config, ...c };

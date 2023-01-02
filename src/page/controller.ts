@@ -11,7 +11,15 @@ import debounce from "lodash.debounce";
 import { defaultState } from "../common/constants";
 import { filterLogsFn } from "../common/filterLogsFn";
 
+import { config } from "./config";
 import { publisher, publishLog } from "./rempl-publisher";
+
+document.addEventListener("keydown", e => {
+  if (config.routeKeyboard) {
+    const { key, code, ctrlKey, metaKey } = e;
+    publisher.ns("keyboard").publish({ key, code, ctrlKey, metaKey });
+  }
+});
 
 const localData = ((): Partial<StaticState> => {
   let data = {} as StaticState;

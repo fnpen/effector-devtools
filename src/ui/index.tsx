@@ -1,5 +1,5 @@
 import { useStore } from "effector-react";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { useHotkeys } from "react-hotkeys-hook";
 import { LogToolbar } from "./components/LogToolbar";
@@ -22,20 +22,30 @@ const Body = () => {
   const selected = useStore($selected);
   const selectedTab = useStore($detailsTab);
 
+  const state = useMemo(
+    () => ({
+      selected,
+      setSelected: selectMessage,
+      setSelectedTab: changeTab,
+      selectedTab,
+      hotkeysActive,
+      setHotkeysActive,
+      showHistory: true,
+    }),
+    [
+      selectMessage,
+      changeTab,
+      selectedTab,
+      selected,
+      hotkeysActive,
+      setHotkeysActive,
+    ]
+  );
+
   return (
     <div className="ed-body">
       <IdsProvider.Provider value={logIds}>
-        <TableStateProvider.Provider
-          value={{
-            selected,
-            setSelected: selectMessage,
-            setSelectedTab: changeTab,
-            selectedTab,
-            hotkeysActive,
-            setHotkeysActive,
-            showHistory: true,
-          }}
-        >
+        <TableStateProvider.Provider value={state}>
           <Table />
         </TableStateProvider.Provider>
       </IdsProvider.Provider>

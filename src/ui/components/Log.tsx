@@ -17,25 +17,13 @@ import { TableStateProvider } from "../Table";
 import { ToolsMessage } from "./../../common/types";
 import { getPrevHistoryJson } from "./details/DetailsBodyDiff";
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function isEmpty(obj: any) {
-  // null and undefined are "empty"
   if (obj == null) return true;
-
-  // Assume if it has a length property with a non-zero value
-  // that that property is correct.
   if (obj.length > 0) return false;
   if (obj.length === 0) return true;
-
-  // If it isn't an object at this point
-  // it is empty, but it can't be anything *but* empty
-  // Is it empty?  Depends on your application.
   if (typeof obj !== "object") return true;
-
-  // Otherwise, does it have any properties of its own?
-  // Note that this doesn't handle
-  // toString and valueOf enumeration bugs in IE < 9
   for (var key in obj) {
     if (hasOwnProperty.call(obj, key)) return false;
   }
@@ -72,25 +60,47 @@ const renderPayload = memoize(
       let result = "";
 
       if (changes.added && !isEmpty(changes.added)) {
-        result += `<div style="background: #e2fcdc;">${colorizeJson(
+        result += `<span style="background: #e2fcdc;">${colorizeJson(
           changes.added
-        )}</div> `;
+        )}</span> `;
       }
 
       if (changes.updated && !isEmpty(changes.updated)) {
-        result += `<div style="background: #fff3c6;">${colorizeJson(
+        result += `<span style="background: #fff3c6;">${colorizeJson(
           changes.updated
-        )}</div> `;
+        )}</span> `;
       }
       if (changes.deleted && !isEmpty(changes.deleted)) {
-        result += `<div style="background: #f8e5e5;">${colorizeJson(
+        result += `<span style="background: #f8e5e5;">${colorizeJson(
           changes.deleted
-        )}</div> `;
+        )}</span> `;
       }
 
       if (isAborted()) return false;
 
       return result;
+    } else if (kind === "effect") {
+      const data = await parseJson(payload);
+
+      let result = "<div>pending...</div>";
+      let params = data;
+
+      if (name.endsWith(".done")) {
+        params = data.params;
+        result = data.result ? colorizeJson(data.result) : "<div>void</div>";
+      }
+      if (name.endsWith(".fail")) {
+        params = data.params;
+        result = data.error.message
+          ? `<span style="color:red;">${data.error.message}</span>`
+          : colorizeJson(data.error);
+      }
+
+      let html = `<div><strong>(</strong> ${colorizeJson(
+        params
+      )} <strong>)</strong></div><div> <strong>⇒</strong> ${result}</div>`;
+
+      return html;
     } else {
       const pl = payloadShort ?? payload;
 
@@ -126,7 +136,7 @@ export const RowPayload = memo(
             if (aborted) return false;
             // await (() => new Promise(r => setTimeout(r, 30)))();
 
-            if (aborted) return false;
+            // if (aborted) return false;
 
             return await renderPayload(log, () => aborted);
           });
@@ -152,41 +162,39 @@ export const RowPayload = memo(
   (a, b) => a.id === b.id
 );
 
-export const Row = //memo(
-  ({ children: id, "data-index": index }) => {
-    const { selected, setSelected } = useContext(TableStateProvider);
+export const Row = ({ children: id, "data-index": index }) => {
+  const { selected, setSelected } = useContext(TableStateProvider);
 
-    const log = useStoreMap({
-      store: $logs,
-      keys: [id],
-      fn: (logs, [id]) => logs[id],
-    });
+  const log = useStoreMap({
+    store: $logs,
+    keys: [id],
+    fn: (logs, [id]) => logs[id],
+  });
 
-    return typeof log?.id === "number" ? (
-      <div
-        className={clsx("ed-list-item", {
-          "ed-list-item--odd": index % 2 === 0,
-          "ed-list-item--selected": selected === log.id,
-        })}
-        onClick={() => setSelected(log.id)}
-      >
-        <div className={"ed-list-item-icons"} title={log.op}>
-          <div
-            className={clsx("op-icon", `op-icon-${log.kind}`)}
-            title={log.kind}
-          ></div>
-          <div
-            className={clsx(
-              "op-icon op-icon-second",
-              `op-icon-${log.op}`,
-              `op-icon-${log.op}-${log.kind}`
-            )}
-            title={log.op}
-          ></div>
-        </div>
-        <div title={log.name}>{log.name}</div>
-        <RowPayload log={log} />
+  return typeof log?.id === "number" ? (
+    <div
+      className={clsx("ed-list-item", {
+        "ed-list-item--odd": index % 2 === 0,
+        "ed-list-item--selected": selected === log.id,
+      })}
+      onClick={() => setSelected(log.id)}
+    >
+      <div className={"ed-list-item-icons"} title={log.op}>
+        <div
+          className={clsx("op-icon", `op-icon-${log.kind}`)}
+          title={log.kind}
+        ></div>
+        <div
+          className={clsx(
+            "op-icon op-icon-second",
+            `op-icon-${log.op}`,
+            `op-icon-${log.op}-${log.kind}`
+          )}
+          title={log.op}
+        ></div>
       </div>
-    ) : null;
-  };
-// (a, b) => a.children === b.children
+      <div title={log.name}>{log.name}</div>
+      <RowPayload log={log} />
+    </div>
+  ) : null;
+};

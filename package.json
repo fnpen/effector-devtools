@@ -12,7 +12,10 @@
   "main": "./dist/devtools.js",
   "module": "./dist/devtools.mjs",
   "exports": {
-    ".": "./dist/devtools.mjs",
+    ".": {
+      "import": "./dist/devtools.mjs",
+      "require": "./dist/devtools.js"
+    },
     "./babel-plugin": {
       "default": "./dist/effector-babel-plugin.js"
     },

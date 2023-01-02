@@ -148,7 +148,7 @@
         }
         &:nth-child(2) {
           flex: none;
-          width: 140px;
+          width: 200px;
         }
       }
     }
@@ -228,7 +228,7 @@
           }
           &:nth-child(2) {
             flex: none;
-            width: 140px;
+            width: 200px;
           }
         }
 
@@ -236,11 +236,23 @@
           padding: 0;
           display: flex;
 
-          & > * {
+          & div {
             flex: 1;
+            display: flex;
+            margin: 0 4px;
+            min-width: 0;
+          }
+
+          & span {
+            flex-shrink: 1;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding: 0 4px;
+            margin: 0 4px;
+            min-width: 0;
+
+            &.center {
+              text-align: center;
+            }
           }
         }
       }
