@@ -20,10 +20,13 @@ import { getPrevHistoryJson } from "./details/DetailsBodyDiff";
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function isEmpty(obj: any) {
-  if (obj == null) return true;
+  if (obj === null || obj === undefined) return true;
+
+  if (["number", "string", "boolean"].includes(typeof obj)) return false;
+
   if (obj.length > 0) return false;
   if (obj.length === 0) return true;
-  if (typeof obj !== "object") return true;
+  if (!["object"].includes(typeof obj)) return true;
   for (var key in obj) {
     if (hasOwnProperty.call(obj, key)) return false;
   }
@@ -38,7 +41,7 @@ const renderPayload = memoize(
     { id, name, payloadShort, payload, kind }: ToolsMessage,
     isAborted: () => boolean
   ) => {
-    if (kind === "store") {
+    if (["store", "diff"].includes(kind)) {
       if (isAborted()) return false;
 
       const storeHistory = $storeHistory.getState();
@@ -46,12 +49,20 @@ const renderPayload = memoize(
 
       if (isAborted()) return false;
 
-      const [prev, current] = await Promise.all([
+      let [prev, current] = await Promise.all([
         parseJson(prevJson),
         parseJson(payload),
       ]);
 
       if (isAborted()) return false;
+
+      if (isEmpty(prev)) {
+        if (Array.isArray(current)) {
+          prev = [];
+        } else if (typeof current === "object") {
+          prev = {};
+        }
+      }
 
       const changes = detailedDiff(prev, current);
 
@@ -59,18 +70,17 @@ const renderPayload = memoize(
 
       let result = "";
 
-      if (changes.added && !isEmpty(changes.added)) {
+      if (!isEmpty(changes.added)) {
         result += `<span style="background: #e2fcdc;">${colorizeJson(
           changes.added
         )}</span> `;
       }
-
-      if (changes.updated && !isEmpty(changes.updated)) {
+      if (!isEmpty(changes.updated)) {
         result += `<span style="background: #fff3c6;">${colorizeJson(
           changes.updated
         )}</span> `;
       }
-      if (changes.deleted && !isEmpty(changes.deleted)) {
+      if (!isEmpty(changes.deleted)) {
         result += `<span style="background: #f8e5e5;">${colorizeJson(
           changes.deleted
         )}</span> `;
@@ -79,6 +89,14 @@ const renderPayload = memoize(
       if (isAborted()) return false;
 
       return result;
+    } else if (kind === "event") {
+      const data = await parseJson(payload);
+
+      let html = `<div><strong>(</strong> ${colorizeJson(
+        data
+      )} <strong>)</strong></div>`;
+
+      return html;
     } else if (kind === "effect") {
       const data = await parseJson(payload);
 

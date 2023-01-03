@@ -16,7 +16,6 @@ export const DetailsBodyHistory = () => {
     setSelected(false);
   }, [setSelected, selectedMessage]);
 
-  // TODO: process ids to make right order
   const passedLogIds = useStoreMap({
     store: $logs,
     keys: [selectedMessage?.name],

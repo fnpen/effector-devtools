@@ -21,7 +21,7 @@ export const useTabsState = () => {
 
   let availableTabs = Object.keys(tabs);
 
-  if (log.kind !== "store") {
+  if (!["store", "diff"].includes(log.kind)) {
     availableTabs = availableTabs.filter(tab => tab !== "diff");
   }
 

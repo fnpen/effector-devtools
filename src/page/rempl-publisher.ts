@@ -52,17 +52,18 @@ publisher.provide("isReady", () => {
   }
 });
 
-export const publishLog = (message: Omit<Message, "id">) => {
+export const publishLog = (message: Partial<Message>) => {
   const id = eventIdSeed++;
 
-  const { name, op, kind, payload } = message;
+  const { payload, ...rest } = message;
 
   const data = {
+    op: "custom",
+    kind: "message",
+    ...rest,
     id,
-    name,
-    kind,
-    op,
-    payload: stringify(payload),
+    time: performance.now(),
+    payload: stringify(message.payload),
   };
 
   if (isReady) {

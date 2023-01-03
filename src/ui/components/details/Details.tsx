@@ -23,7 +23,7 @@ export const DetailsBody = () => {
 export const Details = () => {
   const { selected } = useContext(TableStateProvider);
 
-  return selected ? (
+  return selected !== false ? (
     <div className="ed-details">
       <DetailsToolbar />
       <DetailsBody />

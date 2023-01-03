@@ -1,4 +1,4 @@
-import { Effect, Event, Store } from "effector";
+import { Effect, Event, Store, Subscription } from "effector";
 
 export interface StaticState {
   enabled: boolean;
@@ -11,6 +11,7 @@ export interface AttachLoggerConfig {
   name?: string;
   prefix?: string;
   kind?: string;
+  process?: ProcessFn;
 }
 
 export interface FullState extends StaticState {
@@ -22,12 +23,18 @@ export interface Message {
   id: number;
   kind: string;
   name: string;
+  time: number;
   payload?: any;
 }
 
 export type ToolsMessage = Message & {
   index: number;
 };
+
+export type ProcessFn = (
+  payload: any,
+  meta: Omit<Message, "payload">
+) => any | false;
 
 export interface Loggable {
   enabled: boolean;
@@ -36,6 +43,7 @@ export interface Loggable {
   getKind: () => string;
   getName: () => string;
   log: (op: string, payload?: any) => void;
+  process: ProcessFn;
 }
 
 export type AnyUnit<T> = Store<T> | Effect<T, any> | Event<T>;

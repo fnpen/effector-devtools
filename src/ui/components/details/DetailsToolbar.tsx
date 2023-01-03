@@ -6,9 +6,18 @@ import { TableStateProvider } from "../../Table";
 import { Toolbar } from "./../Toolbar";
 import { tabs, useTabsState } from "./useTabsState";
 
+import Prev from "line-awesome/svg/caret-left-solid.svg";
+import Next from "line-awesome/svg/caret-right-solid.svg";
+import { useCurrentNext, useCurrentPrev } from "./useCurrentPrev";
+
 export const DetailsToolbar = () => {
-  const { parentSetHotkeysActive, hotkeysActive, setSelected, setSelectedTab } =
-    useContext(TableStateProvider);
+  const {
+    parentSetHotkeysActive,
+    hotkeysActive,
+    selected,
+    setSelected,
+    setSelectedTab,
+  } = useContext(TableStateProvider);
 
   const { availableTabs, selectedTab } = useTabsState();
 
@@ -63,6 +72,9 @@ export const DetailsToolbar = () => {
     [selectedTab, setSelectedTab, hotkeysActive, availableTabs.join("/")] // useHotkeys bug
   );
 
+  const { prev } = useCurrentPrev(selected);
+  const { next } = useCurrentNext(selected);
+
   return (
     <Toolbar>
       <a className={"ed-btn"} onClick={() => setSelected(false)}>
@@ -79,6 +91,19 @@ export const DetailsToolbar = () => {
           {tabs[tab]}
         </a>
       ))}
+      <div className="ed-toolbar-space" />
+      <a
+        className={clsx("ed-btn", { "ed-btn--disabled": !prev })}
+        onClick={() => prev && setSelected(prev.id)}
+      >
+        <Prev />
+      </a>
+      <a
+        className={clsx("ed-btn", { "ed-btn--disabled": !next })}
+        onClick={() => next && setSelected(next.id)}
+      >
+        <Next />
+      </a>
     </Toolbar>
   );
 };

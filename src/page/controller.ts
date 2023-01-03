@@ -3,6 +3,7 @@ import type {
   AttachLoggerConfig,
   Loggable,
   LoggableUnit,
+  Message,
   StaticState,
 } from "./../common/types";
 
@@ -11,11 +12,38 @@ import debounce from "lodash.debounce";
 import { defaultState } from "../common/constants";
 import { filterLogsFn } from "../common/filterLogsFn";
 
-import { config } from "./config";
+import { globalConfig } from "./config";
 import { publisher, publishLog } from "./rempl-publisher";
 
+export const logDiff = (name: string, ...args: any[]) => {
+  publishLog({
+    kind: "diff",
+    name,
+    payload: args,
+  });
+};
+
+export const logName = (name: string, ...args: any[]) => {
+  publishLog({
+    name,
+    payload: args,
+  });
+};
+
+export const log = (...args: any[]) => {
+  publishLog({
+    payload: args,
+  });
+};
+
+logDiff("name", ["2"]);
+logName("second", ["1", "2"]);
+log(["1", "2"]);
+
+logDiff("name", ["22", "3"]);
+
 document.addEventListener("keydown", e => {
-  if (config.routeKeyboard) {
+  if (globalConfig.routeKeyboard) {
     const { key, code, ctrlKey, metaKey } = e;
     publisher.ns("keyboard").publish({ key, code, ctrlKey, metaKey });
   }
@@ -121,10 +149,28 @@ export function createLogger<T>(
   unit: AnyUnit<T>,
   config: AttachLoggerConfig = {}
 ) {
-  config = config || {};
+  config = { ...(config || {}) };
+
+  if (
+    !config.prefix &&
+    unit.graphite.meta.derived === 1 &&
+    unit.graphite.meta.op === "event" &&
+    ["done", "fail"].includes(unit.graphite.meta.name)
+  ) {
+    const owner = unit.graphite.family.owners.find(
+      owner => owner.meta.op === "effect"
+    );
+
+    if (owner?.meta?.name) {
+      config.prefix = owner?.meta?.name + ".";
+      config.kind = owner?.meta?.op;
+    }
+  }
 
   const logger: Loggable = {
     enabled: false,
+
+    process: config.process || globalConfig.process || (payload => payload),
 
     getName: () => {
       let name = config.name || unit.compositeName.fullName;
@@ -161,12 +207,17 @@ export function createLogger<T>(
     },
 
     log: (op: string, payload?: any) => {
-      publishLog({
+      const data = {
         op,
         kind: logger.getKind(),
         name: logger.getName(),
-        payload,
-      });
+      } as Message;
+
+      data.payload = logger.process(payload, data);
+
+      if (data.payload !== false) {
+        publishLog(data);
+      }
     },
   };
 
@@ -197,16 +248,8 @@ export const attachLogger = <T>(
     onUnitCreate(unitWithLogger);
 
     if (is.effect(unit)) {
-      attachLogger(unit.done, {
-        ...config,
-        kind: "effect",
-        prefix: unitWithLogger.logger.getName() + ".",
-      });
-      attachLogger(unit.fail, {
-        ...config,
-        kind: "effect",
-        prefix: unitWithLogger.logger.getName() + ".",
-      });
+      attachLogger(unit.done, config);
+      attachLogger(unit.fail, config);
     }
   }
 };

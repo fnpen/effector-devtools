@@ -92,8 +92,8 @@ $storeHistory
   .on(logRecieved, (history, log) => {
     if (
       !log ||
-      log.kind !== "store" ||
-      log.op !== "unit-watch" ||
+      !["store", "diff"].includes(log.kind) ||
+      !["unit-watch", "custom"].includes(log.op) ||
       !log.payload
     ) {
       return history;

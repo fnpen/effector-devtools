@@ -1,8 +1,14 @@
 import { getHost } from "rempl";
+import { ProcessFn } from "../common/types";
 
-let config: { inPage?: boolean; routeKeyboard?: boolean } = {
+let config: {
+  inPage?: boolean;
+  routeKeyboard?: boolean;
+  process?: ProcessFn;
+} = {
   routeKeyboard: true,
   inPage: false,
+  process: data => data,
 };
 
 const loggerSettings = (c: typeof config) => {
@@ -15,4 +21,4 @@ const loggerSettings = (c: typeof config) => {
   }
 };
 
-export { config, loggerSettings as setupLogger };
+export { config as globalConfig, loggerSettings as setupLogger };

@@ -40,6 +40,11 @@
     border-bottom: 2px solid #d1d1d1;
     padding: 0 4px;
 
+    &.ed-toolbar--secondary {
+      border-bottom: 1px solid #d1d1d1;
+      background: hsl(0deg 0% 98%);
+    }
+
     & a {
       cursor: pointer;
     }
@@ -77,6 +82,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: opacity 0.2ms;
 
       & svg {
         fill: #383838;
@@ -84,6 +90,11 @@
 
       &:hover {
         background-color: #e6e5e5;
+      }
+
+      &.ed-btn--disabled {
+        pointer-events: none;
+        opacity: 0.2;
       }
     }
 
@@ -194,6 +205,12 @@
             margin-left: -4px;
           }
         }
+        & .op-icon-message {
+          background-image: url(line-awesome/svg/comment-solid.svg);
+        }
+        & .op-icon-diff {
+          background-image: url(line-awesome/svg/not-equal-solid.svg);
+        }
         & .op-icon-unit-create {
           background-image: url(line-awesome/svg/plus-solid.svg);
         }
@@ -238,6 +255,8 @@
 
           & div {
             flex: 1;
+            /* max-width: 50%; */
+            /* flex-shrink: 1; */
             display: flex;
             margin: 0 4px;
             min-width: 0;
@@ -279,11 +298,16 @@
     & .ed-details-body {
       min-height: 0;
       flex: 1;
+      display: flex;
+      flex-direction: column;
 
-      & > div {
+      & .ed-details-body-preview,
+      & .ed-details-body-code,
+      & .ed-details-body-history {
         max-height: 100%;
         overflow: auto;
         height: 100%;
+        flex: 1;
       }
 
       & .ed-details-body-corner-btns {
