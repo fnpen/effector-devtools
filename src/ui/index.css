@@ -1,5 +1,6 @@
 @import url("./App.css");
 @import url("highlight.js/styles/base16/github.css");
+@import url("diff2html/bundles/css/diff2html.min.css");
 
 html,
 body {

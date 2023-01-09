@@ -14,7 +14,7 @@ import { IdsProvider, TableStateProvider } from "../Table";
 
 import { Row } from "./Log";
 
-export const TableHotkeys = memo(() => {
+export const TableHotkeys = memo(({ scrollToIndex }) => {
   const { setSelected, selected } = useContext(TableStateProvider);
 
   const ids = useContext(IdsProvider);
@@ -40,13 +40,21 @@ export const TableHotkeys = memo(() => {
     return ids[index];
   }, [ids, selected]);
 
+  const select = useCallback(
+    id => {
+      setSelected(id);
+      scrollToIndex(ids.indexOf(id));
+    },
+    [setSelected, scrollToIndex, ids]
+  );
+
   const next = useCallback(() => {
-    setSelected(nextId);
-  }, [setSelected, nextId]);
+    select(nextId);
+  }, [select, nextId]);
 
   const prev = useCallback(() => {
-    setSelected(prevId);
-  }, [setSelected, prevId]);
+    select(prevId);
+  }, [select, scrollToIndex, prevId]);
 
   return <TableHotkeysInner prev={prev} next={next} />;
 });
@@ -79,16 +87,21 @@ export const TableHotkeysInner = memo(({ next, prev }) => {
   return null;
 });
 
-export const ScrollTo = ({ scrollToIndex }) => {
+/* export const ScrollTo = ({ scrollToIndex }) => {
   const { selected } = useContext(TableStateProvider);
+  const ids = useContext(IdsProvider);
+  const lastSelected = useRef<number | false>(false);
 
   useEffect(() => {
-    if (selected === false) {
+    if (selected === false || lastSelected.current === selected) {
       return;
     }
-    scrollToIndex(selected);
-  }, [selected, scrollToIndex]);
-};
+
+    lastSelected.current = selected;
+
+    scrollToIndex(ids.indexOf(selected));
+  }, [selected, ids, scrollToIndex]);
+}; */
 
 const itemContent = (_, id) => id;
 
@@ -133,7 +146,7 @@ export const LogsBody = memo(({ width, height }) => {
       virtuosoRef?.current?.scrollToIndex({
         index,
         align: "center",
-        behavior: "smooth",
+        behavior: "auto",
       });
     },
     [virtuosoRef]
@@ -141,7 +154,7 @@ export const LogsBody = memo(({ width, height }) => {
 
   return height > 0 && width > 0 && ids.length ? (
     <>
-      <ScrollTo scrollToIndex={scrollToIndex} />
+      {/* <ScrollTo scrollToIndex={scrollToIndex} /> */}
       <Virtuoso
         ref={virtuosoRef}
         style={{ height, width }}
@@ -174,7 +187,7 @@ export const LogsBody = memo(({ width, height }) => {
           Bottom
         </a>
       )}
-      <TableHotkeys />
+      <TableHotkeys scrollToIndex={scrollToIndex} />
     </>
   ) : null;
 }, isEqual);

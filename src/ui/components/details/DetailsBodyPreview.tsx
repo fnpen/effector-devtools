@@ -2,39 +2,49 @@ import { useStore, useStoreMap } from "effector-react";
 import { JSONPath } from "jsonpath-plus";
 import Minus from "line-awesome/svg/minus-square-solid.svg";
 import Plus from "line-awesome/svg/plus-square-solid.svg";
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { $logs } from "../../store/logs";
-import { $expanded, setExpanded } from "../../store/state";
+import { $expanded, $xpathsInput, setExpanded } from "../../store/state";
 import { TableStateProvider } from "../../Table";
 import { Toolbar } from "../Toolbar";
 import { ToolsMessage } from "./../../../common/types";
 import { Json } from "./Json";
+import { XpathFilter } from "./XpathFilter";
 
-export const PreviewToolbar = ({ xpath, setXpath }) => {
-  return (
-    <Toolbar secondary>
-      <div className="ed-toolbar-input">
-        <input
-          placeholder="Filter xPath"
-          value={xpath}
-          onChange={e => setXpath(e.target.value)}
-        />
-      </div>
-    </Toolbar>
-  );
-};
-
-export const DetailsBodyPreview = () => {
+export const PreviewToolbar = () => {
   const { selected } = useContext(TableStateProvider);
-  // const [expanded, setExpanded] = useState(false);
-  const expanded = useStore($expanded);
-  const [xpath, setXpath] = useState("");
 
   const log = useStoreMap({
     store: $logs,
     keys: [selected],
     fn: (logs, [id]) => logs[id],
   }) as ToolsMessage;
+
+  return (
+    <Toolbar secondary>
+      <XpathFilter name={log.name} />
+    </Toolbar>
+  );
+};
+
+export const DetailsBodyPreview = () => {
+  const { selected } = useContext(TableStateProvider);
+
+  const expanded = useStore($expanded);
+
+  const log = useStoreMap({
+    store: $logs,
+    keys: [selected],
+    fn: (logs, [id]) => logs[id],
+  }) as ToolsMessage;
+
+  const xpath = useStoreMap({
+    store: $xpathsInput,
+    keys: [log.name],
+    fn: (xpaths, [name]) => {
+      return xpaths[name];
+    },
+  });
 
   let data = log.payload ? JSON.parse(log.payload) : undefined;
 
@@ -49,16 +59,12 @@ export const DetailsBodyPreview = () => {
   } else if (log.kind === "event") {
     cmp = <Json data={{ ["Event Payload"]: data }} expanded={expanded} />;
   } else if (log.kind === "effect") {
-    if (log.name.endsWith(".done") || log.name.endsWith(".fail")) {
-      cmp = <Json data={data} expanded={expanded} />;
-    } else {
-      cmp = <Json data={{ argument: data }} expanded={expanded} />;
-    }
+    cmp = <Json data={data} expanded={expanded} />;
   }
 
   return (
     <>
-      <PreviewToolbar {...{ xpath, setXpath }} />
+      <PreviewToolbar />
       <div className={"ed-details-body-preview"}>
         {cmp}
         <div className={"ed-details-body-corner-btns"}>

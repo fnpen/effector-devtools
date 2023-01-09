@@ -76,7 +76,7 @@ export const Json = ({ data = null, expanded = true, hideRoot = true }) => {
               // removed: 10,
             };
 
-            return ranks?.[b] - ranks?.[a];
+            return ranks?.[b.toLowerCase()] - ranks?.[a.toLowerCase()];
           }}
         />
       ) : (

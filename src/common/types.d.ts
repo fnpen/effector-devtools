@@ -1,16 +1,18 @@
-import { Effect, Event, Store, Subscription } from "effector";
+import { Effect, Event, Store } from "effector";
 
 export interface StaticState {
   enabled: boolean;
   expanded: boolean;
   zoom: number;
   query: string;
+  diffMode: string;
+  xpaths: { [name: string]: string };
 }
 
 export interface AttachLoggerConfig {
-  name?: string;
-  prefix?: string;
-  kind?: string;
+  // name?: string;
+  // prefix?: string;
+  // kind?: string;
   process?: ProcessFn;
 }
 
@@ -25,10 +27,21 @@ export interface Message {
   name: string;
   time: number;
   payload?: any;
+  fxID?: string;
 }
 
-export type ToolsMessage = Message & {
+export type ToolsMessage = {
+  op: string;
+  id: number;
+  kind: string;
+  name: string;
+
   index: number;
+  time: number;
+  timeEnd?: number;
+  payload?: any;
+  payloadShort?: any;
+  fxID?: string;
 };
 
 export type ProcessFn = (
@@ -38,11 +51,11 @@ export type ProcessFn = (
 
 export interface Loggable {
   enabled: boolean;
-  unwatch?: Subscription;
+  unwatch?: Function;
   setEnabled: (enabled: boolean) => void;
   getKind: () => string;
   getName: () => string;
-  log: (op: string, payload?: any) => void;
+  handler: (context: any) => void;
   process: ProcessFn;
 }
 

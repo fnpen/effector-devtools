@@ -14,7 +14,6 @@ import { colorizeJson, colorizeJsonString } from "../../common/colorizeJson";
 import { parseJson } from "../../common/parseJson";
 import { $logs, $storeHistory } from "../store/logs";
 import { TableStateProvider } from "../Table";
-import { ToolsMessage } from "./../../common/types";
 import { getPrevHistoryJson } from "./details/DetailsBodyDiff";
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -38,12 +37,13 @@ const limit = pLimit(1);
 
 const renderPayload = memoize(
   async (
-    { id, name, payloadShort, payload, kind }: ToolsMessage,
+    { log: { id, name, payloadShort, payload, kind } },
     isAborted: () => boolean
   ) => {
     if (["store", "diff"].includes(kind)) {
       if (isAborted()) return false;
 
+      // const xpath = $xpaths.getState()?.[name] || "";
       const storeHistory = $storeHistory.getState();
       const prevJson = getPrevHistoryJson(storeHistory, name, id);
 
@@ -63,6 +63,12 @@ const renderPayload = memoize(
           prev = {};
         }
       }
+
+      // if (xpath) {
+      //   const path = xpath; // ("$" + debouncedXpath).replaceAll("$$", "$");
+      //   prev = JSONPath({ path, json: prev });
+      //   current = JSONPath({ path, json: current });
+      // }
 
       const changes = detailedDiff(prev, current);
 
@@ -86,6 +92,12 @@ const renderPayload = memoize(
         )}</span> `;
       }
 
+      // if (xpath) {
+      //   result =
+      //     `<div class="op-icon op-icon-filter" title="${`xpath: ${xpath}`}"></div>` +
+      //     result;
+      // }
+
       if (isAborted()) return false;
 
       return result;
@@ -101,14 +113,12 @@ const renderPayload = memoize(
       const data = await parseJson(payload);
 
       let result = "<div>pending...</div>";
-      let params = data;
+      let params = data.params;
 
-      if (name.endsWith(".done")) {
-        params = data.params;
+      if (data.status === "done") {
         result = data.result ? colorizeJson(data.result) : "<div>void</div>";
       }
-      if (name.endsWith(".fail")) {
-        params = data.params;
+      if (data.status === "fail") {
         result = data.error.message
           ? `<span style="color:red;">${data.error.message}</span>`
           : colorizeJson(data.error);
@@ -128,18 +138,26 @@ const renderPayload = memoize(
     }
 
     return payloadShort;
-  },
-  {
-    serializer: args => {
-      return args[0].id;
-    },
   }
+  // {
+  //   serializer: args => {
+  //     return args[0].id;
+  //   },
+  // }
 );
 
 export const RowPayload = memo(
   ({ log }) => {
     const { id, payload, kind } = log;
     const ref = useRef<HTMLDivElement>();
+
+    // const xpath = useStoreMap({
+    //   store: $xpaths,
+    //   keys: [log.name],
+    //   fn: (xpaths, [name]) => {
+    //     return xpaths[name];
+    //   },
+    // });
 
     useEffect(() => {
       let aborted = false;
@@ -156,7 +174,7 @@ export const RowPayload = memo(
 
             // if (aborted) return false;
 
-            return await renderPayload(log, () => aborted);
+            return await renderPayload({ log }, () => aborted);
           });
 
           if (content !== false && ref.current) {
@@ -177,7 +195,7 @@ export const RowPayload = memo(
       ></div>
     );
   },
-  (a, b) => a.id === b.id
+  (a, b) => a.id === b.id && a.log.payload === b.log.payload
 );
 
 export const Row = ({ children: id, "data-index": index }) => {
@@ -202,14 +220,14 @@ export const Row = ({ children: id, "data-index": index }) => {
           className={clsx("op-icon", `op-icon-${log.kind}`)}
           title={log.kind}
         ></div>
-        <div
+        {/* <div
           className={clsx(
             "op-icon op-icon-second",
             `op-icon-${log.op}`,
             `op-icon-${log.op}-${log.kind}`
           )}
           title={log.op}
-        ></div>
+        ></div> */}
       </div>
       <div title={log.name}>{log.name}</div>
       <RowPayload log={log} />

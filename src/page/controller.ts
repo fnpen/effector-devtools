@@ -7,13 +7,43 @@ import type {
   StaticState,
 } from "./../common/types";
 
-import { is, Unit } from "effector";
+import { is, Scope, Unit } from "effector";
 import debounce from "lodash.debounce";
 import { defaultState } from "../common/constants";
 import { filterLogsFn } from "../common/filterLogsFn";
 
 import { globalConfig } from "./config";
+import { getName, watch } from "./debug";
 import { publisher, publishLog } from "./rempl-publisher";
+
+type LogContext = {
+  logType: "initial" | "update";
+  scope: Scope | null;
+  scopeName: string | null;
+  /** node, kind, value, name - common fields for logs and traces */
+  node: Node;
+  kind: string;
+  value: unknown;
+  name: string | null;
+  loc?: {
+    file?: string;
+    line: number;
+    column: number;
+  };
+  stackMeta: Record<string, unknown>;
+  trace: {
+    node: Node;
+    name: string | null;
+    kind: string;
+    value: unknown;
+    loc?: {
+      file?: string;
+      line: number;
+      column: number;
+    };
+    stackMeta: Record<string, unknown>;
+  }[];
+};
 
 export const logDiff = (name: string, ...args: any[]) => {
   publishLog({
@@ -87,6 +117,8 @@ sendState();
 
 function setState(newState: StaticState) {
   state.enabled = newState.enabled;
+  state.diffMode = newState.diffMode;
+  state.xpaths = newState.xpaths;
 
   setFilterQuery(newState.query);
 
@@ -132,15 +164,15 @@ export function onUnitCreate<T>(unit: LoggableUnit<T>) {
   }
 
   // It's non informative for unit event
-  if (
-    unit.kind !== "store" &&
-    !(
-      unit.logger.getKind() === "effect" &&
-      ["done", "fail"].includes(unit.shortName)
-    )
-  ) {
-    unit.logger.log("unit-create");
-  }
+  // if (
+  //   unit.kind !== "store" &&
+  //   !(
+  //     unit.logger.getKind() === "effect" &&
+  //     ["done", "fail"].includes(unit.shortName)
+  //   )
+  // ) {
+  //   unit.logger.log("unit-create");
+  // }
 
   sendState();
 }
@@ -149,23 +181,23 @@ export function createLogger<T>(
   unit: AnyUnit<T>,
   config: AttachLoggerConfig = {}
 ) {
-  config = { ...(config || {}) };
+  // config = { ...(config || {}) };
 
-  if (
-    !config.prefix &&
-    unit.graphite.meta.derived === 1 &&
-    unit.graphite.meta.op === "event" &&
-    ["done", "fail"].includes(unit.graphite.meta.name)
-  ) {
-    const owner = unit.graphite.family.owners.find(
-      owner => owner.meta.op === "effect"
-    );
+  // if (
+  //   !config.prefix &&
+  //   unit.graphite.meta.derived === 1 &&
+  //   unit.graphite.meta.op === "event" &&
+  //   ["done", "fail"].includes(unit.graphite.meta.name)
+  // ) {
+  //   const owner = unit.graphite.family.owners.find(
+  //     owner => owner.meta.op === "effect"
+  //   );
 
-    if (owner?.meta?.name) {
-      config.prefix = owner?.meta?.name + ".";
-      config.kind = owner?.meta?.op;
-    }
-  }
+  //   if (owner?.meta?.name) {
+  //     config.prefix = owner?.meta?.name + ".";
+  //     config.kind = owner?.meta?.op;
+  //   }
+  // }
 
   const logger: Loggable = {
     enabled: false,
@@ -173,16 +205,8 @@ export function createLogger<T>(
     process: config.process || globalConfig.process || (payload => payload),
 
     getName: () => {
-      let name = config.name || unit.compositeName.fullName;
-
-      if (config.prefix) {
-        name = config.prefix + name;
-      }
-
-      return name;
+      return getName(unit) || "";
     },
-
-    getKind: () => config.kind ?? unit.kind,
 
     setEnabled: (enabled: boolean) => {
       if (enabled === logger.enabled) {
@@ -191,11 +215,10 @@ export function createLogger<T>(
 
       if (enabled) {
         if (!logger.enabled) {
-          const unwatch = unit.watch((payload: any) => {
-            logger.log("unit-watch", payload);
+          logger.unwatch = watch(unit, {
+            trace: false,
+            handler: logger.handler,
           });
-
-          logger.unwatch = unwatch;
         }
       } else if (logger.unwatch) {
         logger.unwatch();
@@ -206,11 +229,24 @@ export function createLogger<T>(
       sendState();
     },
 
-    log: (op: string, payload?: any) => {
+    handler: (context: any) => {
+      let payload = context.value;
+
+      if (context.kind === "effect") {
+        const status = context.value?.status || "pending";
+
+        payload = {
+          params: status === "pending" ? context.value : null,
+          ...(context.value || {}),
+          status,
+        };
+      }
+
       const data = {
-        op,
-        kind: logger.getKind(),
-        name: logger.getName(),
+        op: "unit-watch",
+        kind: context.kind,
+        name: context.name,
+        fxID: context.stackMeta?.fxID,
       } as Message;
 
       data.payload = logger.process(payload, data);
@@ -248,8 +284,9 @@ export const attachLogger = <T>(
     onUnitCreate(unitWithLogger);
 
     if (is.effect(unit)) {
-      attachLogger(unit.done, config);
-      attachLogger(unit.fail, config);
+      attachLogger(unit.finally, config);
+      // attachLogger(unit.done, config);
+      // attachLogger(unit.fail, config);
     }
   }
 };

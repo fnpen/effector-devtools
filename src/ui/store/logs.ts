@@ -1,6 +1,6 @@
 import { combine, createEvent, createStore, sample } from "effector";
 import { debounce } from "patronum/debounce";
-import { Message } from "../../common/types";
+import { Message, ToolsMessage } from "../../common/types";
 import { remoteSubscriber } from "../rempl-subscriber";
 import { $filterQuery, $filterQueryRegexp, changeFilterQuery } from "./state";
 
@@ -21,7 +21,7 @@ sample({
 });
 
 export const $filteredOutLogIds = createStore<number[]>([]);
-export const $logs = createStore<{ [id: number]: Message }>({});
+export const $logs = createStore<{ [id: number]: ToolsMessage }>({});
 export const $storeHistory = createStore<{
   [unitName: string]: Array<[id: number, payload: any]>;
 }>({});
@@ -29,8 +29,8 @@ export const $logIds = createStore<number[]>([]);
 
 const $filtrationResult = sample({
   clock: $filterQuery,
-  source: combine([$logs, $logIds, $filteredOutLogIds, $filterQueryRegexp]),
-  fn: ([logs, logIds, filteredOutLogIds, filterQueryRegexp]) => {
+  source: combine([$logs, $filterQueryRegexp]),
+  fn: ([logs, filterQueryRegexp]) => {
     const passed: number[] = [];
     const notPassed: number[] = [];
 
@@ -66,27 +66,57 @@ sample({
 const logRecieved = createEvent<Message>();
 export const emptyLogs = createEvent();
 
-$logs
-  .on(logRecieved, (logs, log) => {
-    if (!log) {
+$logs.reset(emptyLogs);
+
+sample({
+  clock: logRecieved,
+  source: combine([$logs, $logIds]),
+  fn: ([logs, logIds], newLog) => {
+    if (!newLog) {
       return logs;
     }
 
-    if (log.payload) {
-      if (log.payload.length > 400) {
-        log.payloadShort = log.payload.slice(0, 400) + "…";
+    const existingLog = newLog.fxID
+      ? Object.values(logs).find(log => log.fxID === newLog.fxID)
+      : null;
+
+    let id = newLog.id;
+
+    let payloadShort = existingLog?.payloadShort ?? "";
+
+    if (newLog.payload) {
+      if (newLog.payload.length > 400) {
+        payloadShort = newLog.payload.slice(0, 400) + "…";
       }
     }
 
-    return {
-      ...logs,
-      [log.id]: {
-        ...log,
-        index: logs.length,
-      },
-    };
-  })
-  .reset(emptyLogs);
+    if (!existingLog || logIds.indexOf(existingLog.id) !== logIds.length - 1) {
+      logs = {
+        ...logs,
+        [id]: {
+          ...newLog,
+          payloadShort,
+          index: Object.values(logs).length,
+        },
+      };
+    }
+
+    if (existingLog) {
+      logs = {
+        ...logs,
+        [existingLog.id]: {
+          ...existingLog,
+          payload: newLog.payload,
+          payloadShort,
+          timeEnd: newLog.time,
+        },
+      };
+    }
+
+    return logs;
+  },
+  target: $logs,
+});
 
 $storeHistory
   .on(logRecieved, (history, log) => {
@@ -110,9 +140,9 @@ $storeHistory
 
 sample({
   clock: logRecieved,
-  source: combine([$logIds, $filterQueryRegexp]),
-  fn: ([logIds, filterQueryRegexp], log) => {
-    if (!log || !filterQueryRegexp(log.name)) {
+  source: combine([$logIds, $logs, $filterQueryRegexp]),
+  fn: ([logIds, logs, filterQueryRegexp], log) => {
+    if (!log || !logs[log.id] || !filterQueryRegexp(log.name)) {
       return logIds;
     }
 

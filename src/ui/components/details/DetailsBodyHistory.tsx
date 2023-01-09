@@ -5,6 +5,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { $selectedMessage } from "../../store/details";
 import { $logs } from "../../store/logs";
 import { IdsProvider, Table, TableStateProvider } from "../../Table";
+import { logNameMatcher } from "./useCurrentPrev";
 
 export const DetailsBodyHistory = () => {
   const { setHotkeysActive } = useContext(TableStateProvider);
@@ -20,9 +21,11 @@ export const DetailsBodyHistory = () => {
     store: $logs,
     keys: [selectedMessage?.name],
     fn: (logs, [sname]) => {
+      const matcher = logNameMatcher(sname);
+
       const selectedLogs = Object.values(logs).reduce<ToolsMessage[]>(
         (acc, log) => {
-          if (log.name === sname) {
+          if (matcher(log.name)) {
             acc.push(log);
           }
           return acc;

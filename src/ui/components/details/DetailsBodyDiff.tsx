@@ -1,18 +1,26 @@
 import clsx from "clsx";
 import { detailedDiff } from "deep-object-diff";
 import { StoreValue } from "effector";
-import { flatten } from "flat";
 import { JSONPath } from "jsonpath-plus";
 import prettyMilliseconds from "pretty-ms";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { useAsync } from "react-use";
 import { parseJson } from "../../../common/parseJson";
 import { $storeHistory } from "../../store/logs";
 import { TableStateProvider } from "../../Table";
-import { NoData } from "../NoData";
 import { Toolbar } from "../Toolbar";
 import { Json } from "./Json";
 import { useCurrentPrev } from "./useCurrentPrev";
+
+import Split from "line-awesome/svg/columns-solid.svg";
+import Tree from "line-awesome/svg/project-diagram-solid.svg";
+import Unified from "line-awesome/svg/stream-solid.svg";
+
+import { createPatch } from "diff";
+import { html } from "diff2html";
+import { useStore, useStoreMap } from "effector-react";
+import { $diffMode, $xpathsInput, changeDiffMode } from "../../store/state";
+import { XpathFilter } from "./XpathFilter";
 
 export const getPrevHistoryJson = (
   storeHistory: StoreValue<typeof $storeHistory>,
@@ -32,8 +40,10 @@ export const getPrevHistoryJson = (
   return history[index - 1]?.[1];
 };
 
-export const DiffToolbar = ({ id, xpath, setXpath }) => {
+export const DiffToolbar = ({ id }) => {
   const { current, prev } = useCurrentPrev(id);
+
+  const diffMode = useStore($diffMode);
 
   let difference = "-";
 
@@ -46,25 +56,90 @@ export const DiffToolbar = ({ id, xpath, setXpath }) => {
 
   return (
     <Toolbar secondary>
-      <div className="ed-toolbar-input">
-        <input
-          placeholder="Filter xPath"
-          value={xpath}
-          onChange={e => setXpath(e.target.value)}
-        />
-      </div>
+      <XpathFilter name={current.name} />
+      <div className="ed-toolbar-separator" />
+      <a
+        className={clsx("ed-btn", { "ed-btn--selected": diffMode === "split" })}
+        title="Split"
+        onClick={() => changeDiffMode("split")}
+      >
+        <Split />
+      </a>
+      <a
+        className={clsx("ed-btn", {
+          "ed-btn--selected": diffMode === "unified",
+        })}
+        title="Unified"
+        onClick={() => changeDiffMode("unified")}
+      >
+        <Unified />
+      </a>
+      <a
+        className={clsx("ed-btn", { "ed-btn--selected": diffMode === "tree" })}
+        title="Tree"
+        onClick={() => changeDiffMode("tree")}
+      >
+        <Tree />
+      </a>
+
       <div className="ed-toolbar-space" />
       <div className="ed-toolbar-text">Difference: {difference}</div>
     </Toolbar>
   );
 };
 
+const Diff2Html = ({ prev, current, mode = "split" }) => {
+  const ref = useRef<HTMLDivElement>();
+
+  useEffect(() => {
+    const prevText = JSON.stringify(prev, null, 2) || "";
+    const currentText = JSON.stringify(current, null, 2) || "";
+
+    const result = createPatch("diff", prevText, currentText, {});
+
+    const htmlResult = html(result, {
+      matching: "lines",
+      // renderNothingWhenEmpty: true,
+      drawFileList: false,
+      outputFormat: mode === "split" ? "side-by-side" : "line-by-line",
+    });
+
+    if (ref.current) {
+      ref.current.innerHTML = htmlResult;
+    }
+  }, [prev, current, mode, ref]);
+
+  return (
+    <div
+      ref={ref}
+      className={clsx("ed-details-body-diff2html")}
+      // dangerouslySetInnerHTML={{ __html: htmlResult }}
+    >
+      <i>Rendering...</i>
+    </div>
+  );
+};
+
+export const TreeDiff = ({ prevJson, currentJson }) => {
+  const changes = detailedDiff(prevJson, currentJson);
+  return (
+    <div className={clsx("ed-details-body-preview")}>
+      <Json data={changes} expanded={true} />
+    </div>
+  );
+};
 export const DetailsBodyDiff = () => {
   const { selected } = useContext(TableStateProvider);
 
-  const [xpath, setXpath] = useState("");
-
   const { current, prev } = useCurrentPrev(selected);
+
+  const xpath = useStoreMap({
+    store: $xpathsInput,
+    keys: [current.name],
+    fn: (xpaths, [name]) => {
+      return xpaths[name];
+    },
+  });
 
   const currentJsonState = useAsync(
     () => parseJson(current?.payload),
@@ -72,58 +147,66 @@ export const DetailsBodyDiff = () => {
   );
   const prevJsonState = useAsync(() => parseJson(prev?.payload), [prev]);
 
-  if (prevJsonState?.loading || currentJsonState?.loading) {
-    return <NoData text="Loading..." />;
-  }
+  // if (prevJsonState?.loading || currentJsonState?.loading) {
+  //   return <NoData text="Loading..." />;
+  // }
 
   let prevJson = prevJsonState.value;
   let currentJson = currentJsonState.value;
 
   if (xpath) {
-    prevJson = JSONPath({ path: xpath, json: prevJson });
-    currentJson = JSONPath({ path: xpath, json: currentJson });
+    const path = xpath; // ("$" + debouncedXpath).replaceAll("$$", "$");
+    prevJson = JSONPath({ path, json: prevJson });
+    currentJson = JSONPath({ path, json: currentJson });
   }
 
-  const changes = detailedDiff(prevJson, currentJson);
+  const diffMode = useStore($diffMode);
 
-  if (true) {
+  if (diffMode === "tree") {
     return (
       <>
-        <DiffToolbar id={current.id} {...{ xpath, setXpath }} />
-        <div className={clsx("ed-details-body-preview")}>
-          <Json data={changes} expanded={true} />
-        </div>
+        <DiffToolbar id={current.id} />
+        <TreeDiff {...{ prevJson, currentJson }} />
       </>
     );
   } else {
-    const result: any = {};
-
-    function isPrimitive(obj: any) {
-      return obj !== Object(obj);
-    }
-
-    if (changes.added) {
-      result.added = isPrimitive(changes.added)
-        ? changes.added
-        : flatten(changes.added);
-    }
-    if (changes.updated) {
-      result.updated = isPrimitive(changes.updated)
-        ? changes.updated
-        : flatten(changes.updated);
-    }
-    if (changes.deleted) {
-      result.deleted = isPrimitive(changes.deleted)
-        ? changes.deleted
-        : flatten(changes.deleted);
-    }
-
-    return result ? (
-      <div className={clsx("ed-details-body-preview")}>
-        <Json data={result} expanded={true} />
-      </div>
-    ) : null;
+    return (
+      <>
+        <DiffToolbar id={current.id} />
+        <Diff2Html mode={diffMode} prev={prevJson} current={currentJson} />
+      </>
+    );
   }
+
+  // if (true) {
+  //   const result: any = {};
+
+  //   function isPrimitive(obj: any) {
+  //     return obj !== Object(obj);
+  //   }
+
+  //   if (changes.added) {
+  //     result.added = isPrimitive(changes.added)
+  //       ? changes.added
+  //       : flatten(changes.added);
+  //   }
+  //   if (changes.updated) {
+  //     result.updated = isPrimitive(changes.updated)
+  //       ? changes.updated
+  //       : flatten(changes.updated);
+  //   }
+  //   if (changes.deleted) {
+  //     result.deleted = isPrimitive(changes.deleted)
+  //       ? changes.deleted
+  //       : flatten(changes.deleted);
+  //   }
+
+  //   return result ? (
+  //     <div className={clsx("ed-details-body-preview")}>
+  //       <Json data={result} expanded={true} />
+  //     </div>
+  //   ) : null;
+  // }
 
   return null;
 };
