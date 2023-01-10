@@ -64,3 +64,10 @@ logName("Name of Message", ["1", "2"]); // Send message with name.
 logDiff("Name", ["2"]);
 logDiff("Name", ["22", "3"]); // Outputs diff with previous call with same name.
 ```
+
+### Hotkeys
+
+- Option+O/P - Zooming
+- Arrow Up/Down - Change selection
+- Esc - Close details
+- Left/Right - Change tabs.
