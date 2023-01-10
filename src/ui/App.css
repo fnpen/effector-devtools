@@ -219,12 +219,6 @@
         & .op-icon-diff {
           background-image: url(line-awesome/svg/not-equal-solid.svg);
         }
-        & .op-icon-unit-create {
-          background-image: url(line-awesome/svg/plus-solid.svg);
-        }
-        & .op-icon-unit-watch {
-          background-image: url(line-awesome/svg/eye-solid.svg);
-        }
         & .op-icon-event {
           background-image: url(line-awesome/svg/calendar.svg);
         }
@@ -262,7 +256,7 @@
           display: flex;
 
           & div {
-            flex: 1;
+            /* flex: 1; */
             /* max-width: 50%; */
             /* flex-shrink: 1; */
             display: flex;
@@ -270,12 +264,26 @@
             min-width: 0;
           }
 
+          & > span {
+            margin: 0 4px;
+          }
+
+          & * {
+            white-space: pre;
+          }
+
           & span {
             flex-shrink: 1;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin: 0 4px;
+            white-space: pre;
+            /* margin: 0 4px; */
             min-width: 0;
+            max-width: 100%;
+
+            /* & > span {
+              margin: 0;
+            } */
 
             &.center {
               text-align: center;
@@ -391,31 +399,37 @@
     padding: 0px 10px !important;
 
     & > ul {
-      margin: 0 !important;
-    }
-
-    & > ul > li > ul > li {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      flex-wrap: wrap;
-
-      background: hsl(0deg 0% 98%);
-      padding: 12px !important;
       margin: 12px 0 !important;
-
-      &:first-of-type {
-        margin-top: 0;
-      }
-
-      & > ul {
-        flex-basis: 100%;
-        padding-left: 18px !important;
-      }
     }
 
-    & label + span {
-      margin-left: 8px;
+    &.ed-json--root {
+      & > ul {
+        margin: 0 !important;
+      }
+
+      & > ul > li > ul > li {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+
+        background: hsl(0deg 0% 98%);
+        padding: 12px !important;
+        margin: 12px 0 !important;
+
+        &:first-of-type {
+          margin-top: 0;
+        }
+
+        & > ul {
+          flex-basis: 100%;
+          padding-left: 18px !important;
+        }
+      }
+
+      & label + span {
+        margin-left: 8px;
+      }
     }
   }
 }

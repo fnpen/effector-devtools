@@ -120,12 +120,7 @@ sample({
 
 $storeHistory
   .on(logRecieved, (history, log) => {
-    if (
-      !log ||
-      !["store", "diff"].includes(log.kind) ||
-      !["unit-watch", "custom"].includes(log.op) ||
-      !log.payload
-    ) {
+    if (!log || !["store", "diff"].includes(log.kind) || !log.payload) {
       return history;
     }
 

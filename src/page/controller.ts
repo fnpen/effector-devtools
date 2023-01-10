@@ -7,43 +7,15 @@ import type {
   StaticState,
 } from "./../common/types";
 
-import { is, Scope, Unit } from "effector";
+import { is, Unit } from "effector";
 import debounce from "lodash.debounce";
 import { defaultState } from "../common/constants";
 import { filterLogsFn } from "../common/filterLogsFn";
 
 import { globalConfig } from "./config";
-import { getName, watch } from "./debug";
+import { watch } from "./debug";
+import { getName } from "./getName";
 import { publisher, publishLog } from "./rempl-publisher";
-
-type LogContext = {
-  logType: "initial" | "update";
-  scope: Scope | null;
-  scopeName: string | null;
-  /** node, kind, value, name - common fields for logs and traces */
-  node: Node;
-  kind: string;
-  value: unknown;
-  name: string | null;
-  loc?: {
-    file?: string;
-    line: number;
-    column: number;
-  };
-  stackMeta: Record<string, unknown>;
-  trace: {
-    node: Node;
-    name: string | null;
-    kind: string;
-    value: unknown;
-    loc?: {
-      file?: string;
-      line: number;
-      column: number;
-    };
-    stackMeta: Record<string, unknown>;
-  }[];
-};
 
 export const logDiff = (name: string, ...args: any[]) => {
   publishLog({
@@ -65,12 +37,6 @@ export const log = (...args: any[]) => {
     payload: args,
   });
 };
-
-logDiff("name", ["2"]);
-logName("second", ["1", "2"]);
-log(["1", "2"]);
-
-logDiff("name", ["22", "3"]);
 
 document.addEventListener("keydown", e => {
   if (globalConfig.routeKeyboard) {
@@ -243,7 +209,6 @@ export function createLogger<T>(
       }
 
       const data = {
-        op: "unit-watch",
         kind: context.kind,
         name: context.name,
         fxID: context.stackMeta?.fxID,
@@ -285,8 +250,6 @@ export const attachLogger = <T>(
 
     if (is.effect(unit)) {
       attachLogger(unit.finally, config);
-      // attachLogger(unit.done, config);
-      // attachLogger(unit.fail, config);
     }
   }
 };

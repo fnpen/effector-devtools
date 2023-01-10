@@ -33,7 +33,7 @@ export const DetailsBodyHistory = () => {
         []
       );
 
-      selectedLogs.sort((a, b) => b.index - a.index);
+      selectedLogs.sort((a, b) => a.index - b.index);
 
       return selectedLogs.map(log => log.id);
     },

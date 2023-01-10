@@ -4,8 +4,8 @@ import { $logs } from "../../store/logs";
 import { TableStateProvider } from "../../Table";
 
 export const tabs: { [key: string]: string } = {
-  preview: "Preview",
   diff: "Diff",
+  preview: "Preview",
   payload: "Payload",
   history: "History",
 };

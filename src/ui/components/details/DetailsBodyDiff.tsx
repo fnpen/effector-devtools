@@ -1,5 +1,4 @@
 import clsx from "clsx";
-import { detailedDiff } from "deep-object-diff";
 import { StoreValue } from "effector";
 import { JSONPath } from "jsonpath-plus";
 import prettyMilliseconds from "pretty-ms";
@@ -20,6 +19,7 @@ import { createPatch } from "diff";
 import { html } from "diff2html";
 import { useStore, useStoreMap } from "effector-react";
 import { $diffMode, $xpathsInput, changeDiffMode } from "../../store/state";
+import { prepareChanges } from "../prepareChanges";
 import { XpathFilter } from "./XpathFilter";
 
 export const getPrevHistoryJson = (
@@ -120,14 +120,6 @@ const Diff2Html = ({ prev, current, mode = "split" }) => {
   );
 };
 
-export const TreeDiff = ({ prevJson, currentJson }) => {
-  const changes = detailedDiff(prevJson, currentJson);
-  return (
-    <div className={clsx("ed-details-body-preview")}>
-      <Json data={changes} expanded={true} />
-    </div>
-  );
-};
 export const DetailsBodyDiff = () => {
   const { selected } = useContext(TableStateProvider);
 
@@ -163,10 +155,13 @@ export const DetailsBodyDiff = () => {
   const diffMode = useStore($diffMode);
 
   if (diffMode === "tree") {
+    const allChanges = prepareChanges(prevJson, currentJson);
     return (
       <>
         <DiffToolbar id={current.id} />
-        <TreeDiff {...{ prevJson, currentJson }} />
+        <div className={clsx("ed-details-body-preview")}>
+          <Json noRootSections data={allChanges} expanded={true} />
+        </div>
       </>
     );
   } else {
@@ -177,36 +172,6 @@ export const DetailsBodyDiff = () => {
       </>
     );
   }
-
-  // if (true) {
-  //   const result: any = {};
-
-  //   function isPrimitive(obj: any) {
-  //     return obj !== Object(obj);
-  //   }
-
-  //   if (changes.added) {
-  //     result.added = isPrimitive(changes.added)
-  //       ? changes.added
-  //       : flatten(changes.added);
-  //   }
-  //   if (changes.updated) {
-  //     result.updated = isPrimitive(changes.updated)
-  //       ? changes.updated
-  //       : flatten(changes.updated);
-  //   }
-  //   if (changes.deleted) {
-  //     result.deleted = isPrimitive(changes.deleted)
-  //       ? changes.deleted
-  //       : flatten(changes.deleted);
-  //   }
-
-  //   return result ? (
-  //     <div className={clsx("ed-details-body-preview")}>
-  //       <Json data={result} expanded={true} />
-  //     </div>
-  //   ) : null;
-  // }
 
   return null;
 };

@@ -1,8 +1,8 @@
 import clsx from "clsx";
-import { detailedDiff } from "deep-object-diff";
 import { useStoreMap } from "effector-react";
 import memoize from "fast-memoize";
 import pLimit from "p-limit";
+
 import React, {
   memo,
   startTransition,
@@ -14,24 +14,11 @@ import { colorizeJson, colorizeJsonString } from "../../common/colorizeJson";
 import { parseJson } from "../../common/parseJson";
 import { $logs, $storeHistory } from "../store/logs";
 import { TableStateProvider } from "../Table";
+import { isEmpty } from "../utils/isEmpty";
 import { getPrevHistoryJson } from "./details/DetailsBodyDiff";
+import { prepareChanges } from "./prepareChanges";
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
-
-function isEmpty(obj: any) {
-  if (obj === null || obj === undefined) return true;
-
-  if (["number", "string", "boolean"].includes(typeof obj)) return false;
-
-  if (obj.length > 0) return false;
-  if (obj.length === 0) return true;
-  if (!["object"].includes(typeof obj)) return true;
-  for (var key in obj) {
-    if (hasOwnProperty.call(obj, key)) return false;
-  }
-
-  return true;
-}
+export const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 const limit = pLimit(1);
 
@@ -43,9 +30,12 @@ const renderPayload = memoize(
     if (["store", "diff"].includes(kind)) {
       if (isAborted()) return false;
 
-      // const xpath = $xpaths.getState()?.[name] || "";
       const storeHistory = $storeHistory.getState();
       const prevJson = getPrevHistoryJson(storeHistory, name, id);
+
+      if (payload.length >= 10000) {
+        return `<span style="color: #cccccc;margin: 0 4px;">${payload}</span>`;
+      }
 
       if (isAborted()) return false;
 
@@ -56,57 +46,20 @@ const renderPayload = memoize(
 
       if (isAborted()) return false;
 
-      if (isEmpty(prev)) {
-        if (Array.isArray(current)) {
-          prev = [];
-        } else if (typeof current === "object") {
-          prev = {};
-        }
-      }
-
-      // if (xpath) {
-      //   const path = xpath; // ("$" + debouncedXpath).replaceAll("$$", "$");
-      //   prev = JSONPath({ path, json: prev });
-      //   current = JSONPath({ path, json: current });
-      // }
-
-      const changes = detailedDiff(prev, current);
-
-      if (isAborted()) return false;
-
       let result = "";
+      const allChanges = prepareChanges(prev, current);
 
-      if (!isEmpty(changes.added)) {
-        result += `<span style="background: #e2fcdc;">${colorizeJson(
-          changes.added
-        )}</span> `;
+      if (Object.values(allChanges).length) {
+        result = `<span>${colorizeJson(allChanges)}</span> `;
       }
-      if (!isEmpty(changes.updated)) {
-        result += `<span style="background: #fff3c6;">${colorizeJson(
-          changes.updated
-        )}</span> `;
-      }
-      if (!isEmpty(changes.deleted)) {
-        result += `<span style="background: #f8e5e5;">${colorizeJson(
-          changes.deleted
-        )}</span> `;
-      }
-
-      // if (xpath) {
-      //   result =
-      //     `<div class="op-icon op-icon-filter" title="${`xpath: ${xpath}`}"></div>` +
-      //     result;
-      // }
-
-      if (isAborted()) return false;
 
       return result;
     } else if (kind === "event") {
       const data = await parseJson(payload);
 
-      let html = `<div><strong>(</strong> ${colorizeJson(
+      let html = `<div><strong> ( </strong> ${colorizeJson(
         data
-      )} <strong>)</strong></div>`;
+      )} <strong> ) </strong></div>`;
 
       return html;
     } else if (kind === "effect") {
@@ -120,13 +73,13 @@ const renderPayload = memoize(
       }
       if (data.status === "fail") {
         result = data.error.message
-          ? `<span style="color:red;">${data.error.message}</span>`
+          ? `<span style="color:red;margin: 0 4px;">${data.error.message}</span>`
           : colorizeJson(data.error);
       }
 
-      let html = `<div><strong>(</strong> ${colorizeJson(
+      let html = `<div><strong> ( </strong> ${colorizeJson(
         params
-      )} <strong>)</strong></div><div> <strong>⇒</strong> ${result}</div>`;
+      )} <strong> ) </strong></div><div> <strong>⇒</strong> ${result}</div>`;
 
       return html;
     } else {
@@ -139,11 +92,6 @@ const renderPayload = memoize(
 
     return payloadShort;
   }
-  // {
-  //   serializer: args => {
-  //     return args[0].id;
-  //   },
-  // }
 );
 
 export const RowPayload = memo(

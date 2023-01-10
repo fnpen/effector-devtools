@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import React, { useCallback } from "react";
 import { JSONTree } from "react-json-tree";
 import { NoData } from "./../NoData";
@@ -22,63 +23,89 @@ const theme = {
   base0E: "#a71d5d",
   base0F: "#333333",
 };
-export const Json = ({ data = null, expanded = true, hideRoot = true }) => {
+export const Json = ({
+  data = null,
+  expanded = true,
+  hideRoot = true,
+  noRootSections = false,
+}) => {
   const shouldExpandNode = useCallback(() => expanded, [expanded]);
 
   return (
-    <div className="ed-json">
+    <div className={clsx("ed-json", { "ed-json--root": !noRootSections })}>
       {data ? (
-        <JSONTree
-          hideRoot={hideRoot}
-          data={data}
-          theme={theme}
-          invertTheme={false}
-          shouldExpandNode={shouldExpandNode}
-          labelRenderer={(keyPath, nodeType, expanded, expandable) => {
-            let text = keyPath[0];
+        typeof data === "string" ? (
+          <span dangerouslySetInnerHTML={{ __html: data }} />
+        ) : (
+          <JSONTree
+            hideRoot={hideRoot}
+            data={data}
+            theme={theme}
+            invertTheme={false}
+            shouldExpandNode={shouldExpandNode}
+            labelRenderer={
+              noRootSections
+                ? undefined
+                : (keyPath, nodeType, expanded, expandable) => {
+                    if (!keyPath.length) {
+                      return "";
+                    }
 
-            if (typeof keyPath[0] === "number") {
-              text = "[" + text + "]";
+                    let text = keyPath[0];
+
+                    // if (typeof keyPath[0] === "number") {
+                    //   text = "[" + text + "]";
+                    // }
+
+                    text = text.toString();
+
+                    if (keyPath && keyPath.length === 1) {
+                      let color = "#000000";
+
+                      if (text === "error") {
+                        color = "red";
+                        text = "Error";
+                      } else if (text === "result") {
+                        color = "green";
+                        text = "Result";
+                      }
+
+                      text = text.charAt(0).toUpperCase() + text.slice(1);
+
+                      return (
+                        <strong
+                          style={{ fontSize: 14, padding: "14px 0", color }}
+                        >
+                          {text}
+                        </strong>
+                      );
+                    }
+
+                    return <strong>{text}: </strong>;
+                  }
             }
-
-            text = text.toString();
-
-            if (keyPath.length === 1) {
-              let color = "#000000";
-
-              if (text === "error") {
-                color = "red";
-                text = "Error";
-              } else if (text === "result") {
-                color = "green";
-                text = "Result";
-              }
-
-              text = text.charAt(0).toUpperCase() + text.slice(1);
-
+            valueRenderer={(value: any) => {
               return (
-                <strong style={{ fontSize: 14, padding: "14px 0", color }}>
-                  {text}
-                </strong>
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: value.toString().replace(/^\"+|\"+$/g, ""),
+                  }}
+                ></span>
               );
-            }
+            }}
+            sortObjectKeys={(a, b) => {
+              const ranks = {
+                error: 100,
+                status: 100,
+                message: 70,
+                result: 50,
+                params: 10,
+              };
 
-            return <strong>{text}: </strong>;
-          }}
-          sortObjectKeys={(a, b) => {
-            const ranks = {
-              error: 100,
-              message: 70,
-              result: 50,
-              params: 10,
-              // added: 12,
-              // updated: 11,
-              // removed: 10,
-            };
-
-            return ranks?.[b.toLowerCase()] - ranks?.[a.toLowerCase()];
-          }}
-        />
+              return ranks?.[b.toLowerCase()] - ranks?.[a.toLowerCase()];
+            }}
+          />
+        )
       ) : (
         <NoData />
       )}

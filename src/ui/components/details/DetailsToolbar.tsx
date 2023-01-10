@@ -80,13 +80,13 @@ export const DetailsToolbar = () => {
       <a className={"ed-btn"} onClick={() => setSelected(false)}>
         <Times />
       </a>
-      {availableTabs.map(tab => (
+      {availableTabs.map((tab, i) => (
         <a
           key={tab}
           className={clsx("ed-tab-header", {
             "ed-tab-header--selected": selectedTab === tab,
           })}
-          onClick={() => setSelectedTab(tab)}
+          onClick={() => setSelectedTab(i === 0 ? "" : tab)}
         >
           {tabs[tab]}
         </a>

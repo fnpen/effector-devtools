@@ -21,7 +21,6 @@ export interface FullState extends StaticState {
 }
 
 export interface Message {
-  op: string;
   id: number;
   kind: string;
   name: string;
@@ -31,7 +30,6 @@ export interface Message {
 }
 
 export type ToolsMessage = {
-  op: string;
   id: number;
   kind: string;
   name: string;

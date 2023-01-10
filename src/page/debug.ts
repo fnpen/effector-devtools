@@ -12,6 +12,9 @@ import {
   Store,
   Unit,
 } from "effector";
+import { getName } from "./getName";
+
+// TOOD: use patronum/debug directly
 
 type LogContext = {
   logType: "initial" | "update";
@@ -391,7 +394,7 @@ function getScopeName(scope: Scope | null) {
 }
 
 // Utils
-function isEffectChild(node: Node | Unit<any>) {
+export function isEffectChild(node: Node | Unit<any>) {
   const actualNode = getNode(node);
   const { sid, named } = actualNode.meta;
 
@@ -407,7 +410,7 @@ function isEffectChild(node: Node | Unit<any>) {
   );
 }
 
-function isStoreOn(node: Node | Unit<any>) {
+export function isStoreOn(node: Node | Unit<any>) {
   const actualNode = getNode(node);
   const { op } = actualNode.meta;
 
@@ -443,69 +446,12 @@ export function getType(unit: Unit<any> | Node) {
 }
 
 type NodeUnit = { graphite: Node } | Node;
-const getGraph = (graph: NodeUnit): Node =>
+export const getGraph = (graph: NodeUnit): Node =>
   (graph as { graphite: Node }).graphite || graph;
 
-const customNames = new Map<Node["id"], string>();
+export const customNames = new Map<Node["id"], string>();
 
-export function getName(unit: Node | Unit<any>): string | null {
-  const custom = customNames.get(getGraph(unit as any).id);
-  if (custom) {
-    return custom;
-  }
-
-  if (isEffectChild(unit)) {
-    const node = getNode(unit);
-    const parentEffect = node.family.owners.find(n => n.meta.op === "effect");
-
-    if (parentEffect) {
-      const closestParentDomainName = getOwningDomainName(parentEffect);
-      const formattedDomainName = closestParentDomainName
-        ? `${closestParentDomainName}/`
-        : "";
-
-      return `${formattedDomainName}${getName(parentEffect)}.${
-        node.meta.named
-      }`;
-    }
-
-    return node.meta.named;
-  }
-
-  if (isStoreOn(unit)) {
-    const node = getNode(unit);
-    const targetStoreName = getName(node.next[0]);
-    const triggerEventName = getName(node.family.owners[0]);
-
-    return `${targetStoreName}.on(${triggerEventName})`;
-  }
-
-  if (is.unit(unit)) {
-    if ((unit as any)?.compositeName?.fullName) {
-      return (unit as any).compositeName.fullName;
-    }
-
-    const closestParentDomainName = getOwningDomainName(unit);
-    const formattedDomainName = closestParentDomainName
-      ? `${closestParentDomainName}/`
-      : "";
-
-    if ((unit as any)?.shortName) {
-      return `${formattedDomainName}${(unit as any).shortName}`;
-    }
-    if ((unit as any)?.name) {
-      return `${formattedDomainName}${(unit as any).name}`;
-    }
-  }
-
-  if (getNode(unit)?.meta?.name) {
-    return getNode(unit).meta.name;
-  }
-
-  return null;
-}
-
-function getOwningDomainName(unit: Node | Unit<any>): string | null {
+export function getOwningDomainName(unit: Node | Unit<any>): string | null {
   const closestParentDomain = getNode(unit).family.owners.find(
     n => n.meta.op === "domain"
   );
@@ -531,7 +477,7 @@ function getLoc(unit: Node | Unit<any>) {
   return loc;
 }
 
-function getNode(node: Node | { graphite: Node } | Unit<any>): Node {
+export function getNode(node: Node | { graphite: Node } | Unit<any>): Node {
   const actualNode = "graphite" in node ? node.graphite : (node as Node);
 
   return actualNode;

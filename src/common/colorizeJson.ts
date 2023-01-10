@@ -34,7 +34,7 @@ const getTokens = (input: any) => {
 const colors = {
   // BRACE: "#cccccc",
   // BRACKET: "#cccccc",
-  // COLON: "#cccccc",
+  COLON: "#333",
   // COMMA: "#cccccc",
   STRING_KEY: "#333",
   // STRING_KEY: "#69786d",
@@ -50,11 +50,21 @@ const colorFn = (type: keyof typeof colors, v: string): string =>
 
 function colorize(tokens: any[]) {
   return tokens.reduce((acc, token) => {
+    if (token.value.indexOf(`"<span`) === 0) {
+      return acc + token.value.replace(/^\"+|\"+$/g, "");
+    }
+
     if (token.type === "STRING_KEY") {
       token.value = " " + token.value.replace(/["]/g, "");
     }
     if (token.type === "COLON") {
       token.value = ": ";
+    }
+    if (token.type === "BRACKET") {
+      token.value = " " + token.value + " ";
+    }
+    if (token.type === "BRACE") {
+      token.value = " " + token.value + " ";
     }
 
     return acc + colorFn(token.type, token.value);
