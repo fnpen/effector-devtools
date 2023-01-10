@@ -1,6 +1,6 @@
 # @fnpen/effector-devtools - Effector DevTools
 
-<img width="550" alt="011101h0pqhg7gnd05" src="https://user-images.githubusercontent.com/31767378/211662363-ba5141d6-4781-4421-886c-824ffdd06c16.png">
+![Demo](https://user-images.githubusercontent.com/31767378/211662670-8ebd091b-1773-4b16-946a-0284c0a875ea.png)
 
 ## How to use
 
