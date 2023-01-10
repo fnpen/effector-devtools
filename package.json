@@ -30,9 +30,7 @@
   "dependencies": {
     "@fastify/deepmerge": "^1.3.0",
     "clsx": "^1.2.1",
-    "deep-diff": "^1.0.2",
     "deep-object-diff": "^1.1.9",
-    "deepmerge": "^4.2.2",
     "diff": "^5.1.0",
     "diff2html": "^3.4.22",
     "effector": "^22.5.0",
@@ -43,7 +41,6 @@
     "highlight.js": "^11.7.0",
     "jsonpath-plus": "^7.2.0",
     "line-awesome": "^1.3.0",
-    "object-traversal": "^1.0.1",
     "p-limit": "^4.0.0",
     "patronum": "^1.14.1",
     "pretty-ms": "^8.0.0",
