@@ -87,11 +87,10 @@ async function buildMain(config) {
   );
 
   config = {
-    entryPoints: [path.join(basePath, "src/devtools.ts")],
     bundle: true,
     sourcemap: true,
     external: ["effector"],
-    format: "esm",
+    format: "cjs",
     target: "es2015",
     platform: "browser",
     write: true,
@@ -107,13 +106,14 @@ async function buildMain(config) {
     [
       {
         ...config,
-        format: "esm",
-        outfile: path.join(basePath, "dist/devtools.mjs"),
+        entryPoints: [path.join(basePath, "src/devtools.ts")],
+        outfile: path.join(basePath, "dist/devtools.js"),
       },
       {
         ...config,
-        format: "cjs",
-        outfile: path.join(basePath, "dist/devtools.js"),
+        entryPoints: [path.join(basePath, "src/devtools.prod.ts")],
+        sourcemap: false,
+        outfile: path.join(basePath, "dist/devtools.prod.js"),
       },
     ].map(c => esbuild.build(c))
   );
@@ -129,6 +129,8 @@ async function buildBabelPlugin(config) {
 
     platform: "neutral",
     write: true,
+    format: "cjs",
+    outfile: path.join(basePath, "dist/effector-babel-plugin.js"),
     ...config,
     define: {
       __DEV__: true,
@@ -136,20 +138,7 @@ async function buildBabelPlugin(config) {
     },
   };
 
-  await Promise.all(
-    [
-      {
-        ...config,
-        format: "esm",
-        outfile: path.join(basePath, "dist/effector-babel-plugin.mjs"),
-      },
-      {
-        ...config,
-        format: "cjs",
-        outfile: path.join(basePath, "dist/effector-babel-plugin.js"),
-      },
-    ].map(c => esbuild.build(c))
-  );
+  await esbuild.build(config);
 }
 
 if (require.main === module) {

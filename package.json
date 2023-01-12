@@ -1,6 +1,6 @@
 {
   "name": "@fnpen/effector-devtools",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Devtools for Effector",
   "repository": "https://github.com/fnpen/effector-devtools",
   "license": "MIT",
@@ -9,14 +9,12 @@
     "devtools",
     "development"
   ],
-  "main": "./dist/devtools.js",
-  "typings222": "./dist/devtools.d.ts",
-  "module": "./dist/devtools.mjs",
+  "main": "./index.js",
+  "typings": "./devtools.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/devtools2.d.ts",
-      "import": "./dist/devtools.mjs",
-      "require": "./dist/devtools.js"
+      "types": "./devtools.d.ts",
+      "require": "./index.js"
     },
     "./babel-plugin": {
       "default": "./dist/effector-babel-plugin.js"
@@ -27,7 +25,6 @@
     "tscheck": "tsc --noEmit",
     "start": "node scripts/server",
     "build": "node scripts/build",
-    "build:types": "tsc --project ./tsconfig.json",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -76,6 +73,9 @@
     "typescript": "^4.9.4"
   },
   "files": [
-    "dist"
+    "dist",
+    "devtools.d.ts",
+    "babel-plugin.js",
+    "index.js"
   ]
 }
