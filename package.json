@@ -1,6 +1,6 @@
 {
   "name": "@fnpen/effector-devtools",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Devtools for Effector",
   "repository": "https://github.com/fnpen/effector-devtools",
   "license": "MIT",
@@ -26,7 +26,7 @@
   "scripts": {
     "tscheck": "tsc --noEmit",
     "start": "node scripts/server",
-    "build": "node scripts/build && npm run build:types",
+    "build": "node scripts/build",
     "build:types": "tsc --project ./tsconfig.json",
     "prepublishOnly": "npm run build"
   },

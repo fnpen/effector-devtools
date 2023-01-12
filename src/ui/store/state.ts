@@ -30,6 +30,7 @@ export const $enabled = $state.map(e => e.enabled);
 export const $expanded = $state.map(e => e.expanded);
 export const $diffMode = $state.map(e => e.diffMode);
 export const $filterKind = $state.map(e => e.filterKind);
+export const $autoSelectLast = $state.map(e => e.autoSelectLast);
 export const $subscriptions = $state.map(e => e.subscriptions);
 export const $filterQuery = $state.map(e => e.query);
 export const $filterQueryRegexp = $filterQuery.map(filterQuery =>
@@ -42,6 +43,7 @@ export const toogleEnable = createEvent();
 export const changeFilterQuery = createEvent<string>();
 export const changeDiffMode = createEvent<string>();
 export const changeFilterKind = createEvent<string>();
+export const changeAutoSelectLast = createEvent<boolean>();
 
 export const changeXPathInput = createEvent<[string, string]>();
 export const changeXPath = createEvent<[string, string]>();
@@ -72,6 +74,10 @@ $state.on(changeXPath, (state, [name, xpath]) => ({
   },
 }));
 
+$state.on(changeAutoSelectLast, (state, autoSelectLast) => ({
+  ...state,
+  autoSelectLast,
+}));
 $state.on(changeFilterQuery, (state, query) => ({ ...state, query }));
 $state.on(changeDiffMode, (state, diffMode) => ({ ...state, diffMode }));
 $state.on(changeFilterKind, (state, filterKind) => ({ ...state, filterKind }));

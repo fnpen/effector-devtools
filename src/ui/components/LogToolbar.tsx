@@ -10,9 +10,11 @@ import {
   filterInputTextChange,
 } from "../store/logs";
 import {
+  $autoSelectLast,
   $enabled,
   $filterKind,
   $subscriptions,
+  changeAutoSelectLast,
   changeFilterKind,
   toogleEnable,
 } from "../store/state";
@@ -23,6 +25,8 @@ export const LogToolbar = () => {
   const subscriptions = useStore($subscriptions);
   const filterInputText = useStore($filterInputText);
   const filterKind = useStore($filterKind);
+  const autoSelectLast = useStore($autoSelectLast);
+
   return (
     <Toolbar>
       <a
@@ -76,6 +80,15 @@ export const LogToolbar = () => {
       >
         Effect
       </a>
+      <div className="ed-toolbar-separator" />
+      <label>
+        <input
+          type={"checkbox"}
+          checked={!!autoSelectLast}
+          onChange={e => changeAutoSelectLast(!!e.target.checked)}
+        />
+        Auto-select
+      </label>
       <div className="ed-toolbar-space" />
       <div className="ed-toolbar-text" title={subscriptions.join("\n")}>
         Subscriptions: {subscriptions.length}

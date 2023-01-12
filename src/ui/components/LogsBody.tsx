@@ -1,3 +1,4 @@
+import { useStore } from "effector-react";
 import React, {
   memo,
   useCallback,
@@ -9,13 +10,16 @@ import React, {
 } from "react";
 import isEqual from "react-fast-compare";
 import { useHotkeys } from "react-hotkeys-hook";
+import { usePrevious } from "react-use";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { $autoSelectLast } from "../store/state";
 import { IdsProvider, TableStateProvider } from "../Table";
 
 import { Row } from "./Log";
 
 export const TableHotkeys = memo(({ scrollToIndex }) => {
   const { setSelected, selected } = useContext(TableStateProvider);
+  const autoSelectLast = useStore($autoSelectLast);
 
   const ids = useContext(IdsProvider);
 
@@ -47,6 +51,13 @@ export const TableHotkeys = memo(({ scrollToIndex }) => {
     },
     [setSelected, scrollToIndex, ids]
   );
+
+  const prevAutoSelectLast = usePrevious(autoSelectLast);
+  useEffect(() => {
+    if (autoSelectLast && prevAutoSelectLast === autoSelectLast) {
+      select(ids[ids.length - 1]);
+    }
+  }, [autoSelectLast, prevAutoSelectLast, select, ids]);
 
   const next = useCallback(() => {
     select(nextId);
@@ -105,7 +116,7 @@ export const TableHotkeysInner = memo(({ next, prev }) => {
 
 const itemContent = (_, id) => id;
 
-export const LogsBody = memo(({ width, height }) => {
+export const LogsBody = memo(() => {
   const appendInterval = useRef(null);
   const virtuosoRef = useRef<VirtuosoHandle>();
   const [atBottom, setAtBottom] = useState(false);
@@ -152,12 +163,11 @@ export const LogsBody = memo(({ width, height }) => {
     [virtuosoRef]
   );
 
-  return height > 0 && width > 0 && ids.length ? (
+  return ids.length ? (
     <>
       {/* <ScrollTo scrollToIndex={scrollToIndex} /> */}
       <Virtuoso
         ref={virtuosoRef}
-        style={{ height, width }}
         data={ids}
         defaultItemHeight={23}
         overscan={30}

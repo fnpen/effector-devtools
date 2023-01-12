@@ -3,6 +3,7 @@ import { Effect, Event, Store } from "effector";
 export interface StaticState {
   enabled: boolean;
   expanded: boolean;
+  autoSelectLast: boolean;
   zoom: number;
   query: string;
   filterKind: string;
