@@ -71,3 +71,7 @@ logDiff("Name", ["22", "3"]); // Outputs diff with previous call with same name.
 - Arrow Up/Down - Change selection
 - Esc - Close details
 - Left/Right - Change tabs.
+
+### Acknowledgments
+
+Thanks to Roman Dvornov (@lahmatiy) for developing [Rempl](https://github.com/rempl/rempl) and Effector community.

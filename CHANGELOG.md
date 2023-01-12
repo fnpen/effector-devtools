@@ -1,7 +1,7 @@
 ## 0.3.0
 
 [BUG] Table height leaking
-[NEW] Auto Ma
+[NEW] Feature: Auto Select last message
 
 ## 0.2.0
 
