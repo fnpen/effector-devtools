@@ -1,56 +1,47 @@
-import { createPublisher } from "rempl";
+import { createPublisher, PublisherNamespace } from "rempl";
 import { ToolId } from "../common/constants";
 import { Message } from "./../common/types";
+import { isBrowser } from "./isBrowser";
+import { stringify } from "./stringify";
 
 let eventIdSeed = 0;
 
 declare let __UI_SRC__: string;
 
-export const publisher = createPublisher(ToolId, () => ({
-  type: "script",
-  value: __UI_SRC__,
-}));
-
-export type Publisher = typeof publisher;
-
-function isReactSyntheticEvent(event: any) {
-  if (typeof event !== "object" || event === null) {
-    return false;
-  }
-  return "_dispatchListeners" in event;
-}
-
-const stringify = (obj: any) => {
-  return JSON.stringify(obj, (k, v) => {
-    if (v && isReactSyntheticEvent(v)) return "SyntheticEvent";
-    if (v && typeof v === "object") {
-      // if (v instanceof Event || (typeof v?.originalEvent === 'object' && v?.originalEvent instanceof Event)) return 'Event';
-      if (v instanceof Error) {
-        return Object.getOwnPropertyNames(v).reduce((acc, k) => {
-          acc[k] = v[k];
-          return acc;
-        }, {});
-      }
-      if (v instanceof Node) return "Node";
-      if (v instanceof Window) return "Window";
-    }
-    return v;
-  });
-};
-
 let isReady = false;
 const stack: any[] = [];
+let publisher;
 
-const eventLogChannel = publisher.ns("logs");
+function initPublisher() {
+  const publisher = createPublisher(ToolId, () => ({
+    type: "script",
+    value: __UI_SRC__,
+  }));
 
-publisher.provide("isReady", () => {
-  isReady = true;
-  if (stack.length) {
-    while (stack.length) {
-      eventLogChannel.publish(stack.shift());
+  publisher.provide("isReady", () => {
+    isReady = true;
+    if (stack.length) {
+      while (stack.length) {
+        publisher.ns("logs").publish(stack.shift());
+      }
     }
+  });
+
+  return publisher;
+}
+
+export const getPublisher = (ns: string) => {
+  if (!isBrowser) {
+    return null; // { ns: () => ({ provide: () => {}, publish: () => {} }) };
   }
-});
+
+  if (!publisher) {
+    publisher = initPublisher();
+  }
+  return publisher?.ns(ns);
+};
+
+export type Publisher = PublisherNamespace;
 
 export const publishLog = (message: Partial<Message>) => {
   const id = eventIdSeed++;
@@ -67,7 +58,7 @@ export const publishLog = (message: Partial<Message>) => {
   };
 
   if (isReady) {
-    eventLogChannel.publish(data);
+    getPublisher("logs").publish(data);
   } else {
     stack.push(data);
   }

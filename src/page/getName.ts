@@ -1,4 +1,5 @@
-import { is, Node, Unit } from "effector";
+import type { Node, Unit } from "effector";
+import { is } from "effector";
 import {
   customNames,
   getGraph,

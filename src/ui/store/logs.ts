@@ -2,7 +2,12 @@ import { combine, createEvent, createStore, sample } from "effector";
 import { debounce } from "patronum/debounce";
 import { Message, ToolsMessage } from "../../common/types";
 import { remoteSubscriber } from "../rempl-subscriber";
-import { $filterQuery, $filterQueryRegexp, changeFilterQuery } from "./state";
+import {
+  $filterKind,
+  $filterQuery,
+  $filterQueryRegexp,
+  changeFilterQuery,
+} from "./state";
 
 export const $filterInputText = createStore<string>("");
 
@@ -28,21 +33,22 @@ export const $storeHistory = createStore<{
 export const $logIds = createStore<number[]>([]);
 
 const $filtrationResult = sample({
-  clock: $filterQuery,
-  source: combine([$logs, $filterQueryRegexp]),
-  fn: ([logs, filterQueryRegexp]) => {
+  clock: combine([$filterQuery, $filterKind]),
+  source: combine([$logs, $filterQueryRegexp, $filterKind]),
+  fn: ([logs, filterQueryRegexp, filterKind]) => {
     const passed: number[] = [];
     const notPassed: number[] = [];
 
-    Object.values(logs)
-      .map(log => log.id)
-      .forEach(logId => {
-        if (filterQueryRegexp(logs[logId].name)) {
-          passed.push(logId);
-        } else {
-          notPassed.push(logId);
-        }
-      });
+    Object.values(logs).forEach(log => {
+      if (
+        filterQueryRegexp(log.name) &&
+        (filterKind === "" || filterKind === log.kind)
+      ) {
+        passed.push(log.id);
+      } else {
+        notPassed.push(log.id);
+      }
+    });
 
     return {
       passed,
@@ -135,9 +141,14 @@ $storeHistory
 
 sample({
   clock: logRecieved,
-  source: combine([$logIds, $logs, $filterQueryRegexp]),
-  fn: ([logIds, logs, filterQueryRegexp], log) => {
-    if (!log || !logs[log.id] || !filterQueryRegexp(log.name)) {
+  source: combine([$logIds, $logs, $filterQueryRegexp, $filterKind]),
+  fn: ([logIds, logs, filterQueryRegexp, filterKind], log) => {
+    if (
+      !log ||
+      !logs[log.id] ||
+      !filterQueryRegexp(log.name) ||
+      !(filterKind === "" || filterKind === log.kind)
+    ) {
       return logIds;
     }
 

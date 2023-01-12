@@ -1,17 +1,16 @@
-import {
-  clearNode,
-  createNode,
+import { clearNode, createNode, is, step } from "effector";
+
+import type {
   Domain,
   Effect,
   Event,
-  is,
   Node,
   Scope,
   Stack,
-  step,
   Store,
   Unit,
 } from "effector";
+
 import { getName } from "./getName";
 
 // TOOD: use patronum/debug directly

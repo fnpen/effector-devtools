@@ -5,6 +5,7 @@ export interface StaticState {
   expanded: boolean;
   zoom: number;
   query: string;
+  filterKind: string;
   diffMode: string;
   xpaths: { [name: string]: string };
 }
@@ -27,6 +28,7 @@ export interface Message {
   time: number;
   payload?: any;
   fxID?: string;
+  trace?: { kind: string; name: string; value: any }[];
 }
 
 export type ToolsMessage = {

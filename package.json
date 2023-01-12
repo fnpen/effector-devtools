@@ -1,8 +1,8 @@
 {
   "name": "@fnpen/effector-devtools",
-  "version": "0.1.0",
-  "description": "TODO",
-  "repository": "TODO",
+  "version": "0.2.0",
+  "description": "Devtools for Effector",
+  "repository": "https://github.com/fnpen/effector-devtools",
   "license": "MIT",
   "keywords": [
     "effector",
@@ -10,9 +10,11 @@
     "development"
   ],
   "main": "./dist/devtools.js",
+  "typings222": "./dist/devtools.d.ts",
   "module": "./dist/devtools.mjs",
   "exports": {
     ".": {
+      "types": "./dist/devtools2.d.ts",
       "import": "./dist/devtools.mjs",
       "require": "./dist/devtools.js"
     },
@@ -24,7 +26,8 @@
   "scripts": {
     "tscheck": "tsc --noEmit",
     "start": "node scripts/server",
-    "build": "node scripts/build",
+    "build": "node scripts/build && npm run build:types",
+    "build:types": "tsc --project ./tsconfig.json",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -39,6 +42,7 @@
     "fast-memoize": "^2.5.2",
     "flat": "^5.0.2",
     "highlight.js": "^11.7.0",
+    "json5": "^2.2.3",
     "jsonpath-plus": "^7.2.0",
     "line-awesome": "^1.3.0",
     "p-limit": "^4.0.0",

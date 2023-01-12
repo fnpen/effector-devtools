@@ -28,8 +28,13 @@ export const Json = ({
   expanded = true,
   hideRoot = true,
   noRootSections = false,
+  shouldExpandNode = false as Function | false,
 }) => {
-  const shouldExpandNode = useCallback(() => expanded, [expanded]);
+  const shouldExpandNodeCb = useCallback(
+    (keyPath, data, level) =>
+      shouldExpandNode ? shouldExpandNode(keyPath, data, level) : expanded,
+    [expanded, shouldExpandNode]
+  );
 
   return (
     <div className={clsx("ed-json", { "ed-json--root": !noRootSections })}>
@@ -42,7 +47,7 @@ export const Json = ({
             data={data}
             theme={theme}
             invertTheme={false}
-            shouldExpandNode={shouldExpandNode}
+            shouldExpandNode={shouldExpandNodeCb}
             labelRenderer={
               noRootSections
                 ? undefined

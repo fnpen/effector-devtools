@@ -9,10 +9,15 @@
     "esModuleInterop": true,
     "allowJs": true,
     "strict": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "noImplicitReturns": true,
     "resolveJsonModule": true,
-    "declaration": true
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": true,
+    "baseUrl": "./src",
+    "outDir": "dist"
   },
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

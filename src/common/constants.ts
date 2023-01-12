@@ -7,5 +7,6 @@ export const defaultState: StaticState = {
   expanded: false,
   zoom: 1.0,
   query: "",
+  filterKind: "",
   diffMode: "split",
 };

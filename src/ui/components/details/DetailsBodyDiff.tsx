@@ -11,6 +11,8 @@ import { Toolbar } from "../Toolbar";
 import { Json } from "./Json";
 import { useCurrentPrev } from "./useCurrentPrev";
 
+import JSON5 from "json5";
+
 import Split from "line-awesome/svg/columns-solid.svg";
 import Tree from "line-awesome/svg/project-diagram-solid.svg";
 import Unified from "line-awesome/svg/stream-solid.svg";
@@ -92,8 +94,8 @@ const Diff2Html = ({ prev, current, mode = "split" }) => {
   const ref = useRef<HTMLDivElement>();
 
   useEffect(() => {
-    const prevText = JSON.stringify(prev, null, 2) || "";
-    const currentText = JSON.stringify(current, null, 2) || "";
+    const prevText = JSON5.stringify(prev, null, 2) || "";
+    const currentText = JSON5.stringify(current, null, 2) || "";
 
     const result = createPatch("diff", prevText, currentText, {});
 

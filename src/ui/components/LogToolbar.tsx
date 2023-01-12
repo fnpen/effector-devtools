@@ -9,13 +9,20 @@ import {
   emptyLogs,
   filterInputTextChange,
 } from "../store/logs";
-import { $enabled, $subscriptions, toogleEnable } from "../store/state";
+import {
+  $enabled,
+  $filterKind,
+  $subscriptions,
+  changeFilterKind,
+  toogleEnable,
+} from "../store/state";
 import { Toolbar } from "./Toolbar";
 
 export const LogToolbar = () => {
   const enabled = useStore($enabled);
   const subscriptions = useStore($subscriptions);
   const filterInputText = useStore($filterInputText);
+  const filterKind = useStore($filterKind);
   return (
     <Toolbar>
       <a
@@ -38,6 +45,37 @@ export const LogToolbar = () => {
           onChange={e => filterInputTextChange(e.target.value)}
         />
       </div>
+      <div className="ed-toolbar-separator" />
+      <a
+        className={clsx("ed-btn", { "ed-btn--selected": filterKind === "" })}
+        onClick={() => changeFilterKind("")}
+      >
+        All
+      </a>
+      <a
+        className={clsx("ed-btn", {
+          "ed-btn--selected": filterKind === "store",
+        })}
+        onClick={() => changeFilterKind("store")}
+      >
+        Store
+      </a>
+      <a
+        className={clsx("ed-btn", {
+          "ed-btn--selected": filterKind === "event",
+        })}
+        onClick={() => changeFilterKind("event")}
+      >
+        Event
+      </a>
+      <a
+        className={clsx("ed-btn", {
+          "ed-btn--selected": filterKind === "effect",
+        })}
+        onClick={() => changeFilterKind("effect")}
+      >
+        Effect
+      </a>
       <div className="ed-toolbar-space" />
       <div className="ed-toolbar-text" title={subscriptions.join("\n")}>
         Subscriptions: {subscriptions.length}

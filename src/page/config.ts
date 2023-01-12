@@ -1,24 +1,25 @@
 import { getHost } from "rempl";
-import { ProcessFn } from "../common/types";
 
-let config: {
+type Config = {
   inPage?: boolean;
   routeKeyboard?: boolean;
-  process?: ProcessFn;
-} = {
-  routeKeyboard: true,
-  inPage: false,
-  process: data => data,
 };
 
-const loggerSettings = (c: typeof config) => {
-  config = { ...config, ...c };
+let defaultConfig: Config = {
+  routeKeyboard: true,
+  inPage: false,
+};
 
-  if (config.inPage) {
+let globalConfig = { ...defaultConfig };
+
+const loggerSettings = (config: Config) => {
+  globalConfig = { ...globalConfig, ...config };
+
+  if (globalConfig.inPage) {
     getHost().activate();
   } else {
     getHost().deactivate();
   }
 };
 
-export { config as globalConfig, loggerSettings as setupLogger };
+export { globalConfig, loggerSettings as setupLogger };

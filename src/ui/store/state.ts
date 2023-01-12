@@ -20,9 +20,7 @@ export const $state = createStore<FullState>({
   subscriptions: [],
 });
 
-// $state.watch(storage =>
-//   window.localStorage.setItem("effector-devtools", JSON.stringify(storage))
-// );
+// $state.watch(state => console.log({ state }));
 
 export const $xpathsInput = createStore<{ [name: string]: string }>({});
 export const $xpaths = $state.map(e => e.xpaths);
@@ -31,6 +29,7 @@ export const $zoom = $state.map(e => e.zoom);
 export const $enabled = $state.map(e => e.enabled);
 export const $expanded = $state.map(e => e.expanded);
 export const $diffMode = $state.map(e => e.diffMode);
+export const $filterKind = $state.map(e => e.filterKind);
 export const $subscriptions = $state.map(e => e.subscriptions);
 export const $filterQuery = $state.map(e => e.query);
 export const $filterQueryRegexp = $filterQuery.map(filterQuery =>
@@ -42,6 +41,7 @@ export const setZoom = createEvent<number>();
 export const toogleEnable = createEvent();
 export const changeFilterQuery = createEvent<string>();
 export const changeDiffMode = createEvent<string>();
+export const changeFilterKind = createEvent<string>();
 
 export const changeXPathInput = createEvent<[string, string]>();
 export const changeXPath = createEvent<[string, string]>();
@@ -74,6 +74,7 @@ $state.on(changeXPath, (state, [name, xpath]) => ({
 
 $state.on(changeFilterQuery, (state, query) => ({ ...state, query }));
 $state.on(changeDiffMode, (state, diffMode) => ({ ...state, diffMode }));
+$state.on(changeFilterKind, (state, filterKind) => ({ ...state, filterKind }));
 $state.on(setExpanded, (state, expanded) => ({ ...state, expanded }));
 $state.on(toogleEnable, state => ({ ...state, enabled: !state.enabled }));
 $state.on(setZoom, (state, zoom) => ({ ...state, zoom }));

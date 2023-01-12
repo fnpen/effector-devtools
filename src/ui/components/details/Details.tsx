@@ -4,6 +4,7 @@ import { DetailsBodyDiff } from "./DetailsBodyDiff";
 import { DetailsBodyHistory } from "./DetailsBodyHistory";
 import { DetailsBodyPayload } from "./DetailsBodyPayload";
 import { DetailsBodyPreview } from "./DetailsBodyPreview";
+import { DetailsBodyTrace } from "./DetailsBodyTrace";
 import { DetailsToolbar } from "./DetailsToolbar";
 import { useTabsState } from "./useTabsState";
 
@@ -16,6 +17,7 @@ export const DetailsBody = () => {
       {selectedTab === "payload" && <DetailsBodyPayload />}
       {selectedTab === "history" && <DetailsBodyHistory />}
       {selectedTab === "diff" && <DetailsBodyDiff />}
+      {selectedTab === "trace" && <DetailsBodyTrace />}
     </div>
   );
 };

@@ -8,6 +8,7 @@ export const tabs: { [key: string]: string } = {
   preview: "Preview",
   payload: "Payload",
   history: "History",
+  trace: "Trace",
 };
 
 export const useTabsState = () => {
@@ -23,6 +24,10 @@ export const useTabsState = () => {
 
   if (!["store", "diff"].includes(log.kind)) {
     availableTabs = availableTabs.filter(tab => tab !== "diff");
+  }
+
+  if (!log.trace) {
+    availableTabs = availableTabs.filter(tab => tab !== "trace");
   }
 
   if (!showHistory) {

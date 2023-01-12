@@ -1,13 +1,13 @@
 import type {
   AnyUnit,
-  AttachLoggerConfig,
   Loggable,
   LoggableUnit,
   Message,
   StaticState,
 } from "./../common/types";
 
-import { is, Unit } from "effector";
+import type { Unit } from "effector";
+import { is } from "effector";
 import debounce from "lodash.debounce";
 import { defaultState } from "../common/constants";
 import { filterLogsFn } from "../common/filterLogsFn";
@@ -15,7 +15,9 @@ import { filterLogsFn } from "../common/filterLogsFn";
 import { globalConfig } from "./config";
 import { watch } from "./debug";
 import { getName } from "./getName";
-import { publisher, publishLog } from "./rempl-publisher";
+import { isBrowser } from "./isBrowser";
+import { getPublisher, publishLog } from "./rempl-publisher";
+import { stringify } from "./stringify";
 
 export const logDiff = (name: string, ...args: any[]) => {
   publishLog({
@@ -38,12 +40,14 @@ export const log = (...args: any[]) => {
   });
 };
 
-document.addEventListener("keydown", e => {
-  if (globalConfig.routeKeyboard) {
-    const { key, code, ctrlKey, metaKey } = e;
-    publisher.ns("keyboard").publish({ key, code, ctrlKey, metaKey });
-  }
-});
+if (isBrowser) {
+  document.addEventListener("keydown", e => {
+    if (globalConfig.routeKeyboard) {
+      const { key, code, ctrlKey, metaKey } = e;
+      getPublisher("keyboard").publish({ key, code, ctrlKey, metaKey });
+    }
+  });
+}
 
 const localData = ((): Partial<StaticState> => {
   let data = {} as StaticState;
@@ -76,14 +80,13 @@ function getState() {
 }
 
 const sendState = debounce(() => {
-  publisher.ns("state").publish(getState());
+  getPublisher("state").publish(getState());
 }, 80);
-
-sendState();
 
 function setState(newState: StaticState) {
   state.enabled = newState.enabled;
   state.diffMode = newState.diffMode;
+  state.filterKind = newState.filterKind;
   state.xpaths = newState.xpaths;
 
   setFilterQuery(newState.query);
@@ -95,7 +98,10 @@ function setState(newState: StaticState) {
   refreshSubscriptions();
 }
 
-publisher.ns("state").provide({ setState });
+if (isBrowser) {
+  getPublisher("state").provide({ setState });
+  sendState();
+}
 
 function setFilterQuery(query: string) {
   if (state.query === query) {
@@ -143,32 +149,9 @@ export function onUnitCreate<T>(unit: LoggableUnit<T>) {
   sendState();
 }
 
-export function createLogger<T>(
-  unit: AnyUnit<T>,
-  config: AttachLoggerConfig = {}
-) {
-  // config = { ...(config || {}) };
-
-  // if (
-  //   !config.prefix &&
-  //   unit.graphite.meta.derived === 1 &&
-  //   unit.graphite.meta.op === "event" &&
-  //   ["done", "fail"].includes(unit.graphite.meta.name)
-  // ) {
-  //   const owner = unit.graphite.family.owners.find(
-  //     owner => owner.meta.op === "effect"
-  //   );
-
-  //   if (owner?.meta?.name) {
-  //     config.prefix = owner?.meta?.name + ".";
-  //     config.kind = owner?.meta?.op;
-  //   }
-  // }
-
+export function createLogger<T>(unit: AnyUnit<T>) {
   const logger: Loggable = {
     enabled: false,
-
-    process: config.process || globalConfig.process || (payload => payload),
 
     getName: () => {
       return getName(unit) || "";
@@ -182,7 +165,7 @@ export function createLogger<T>(
       if (enabled) {
         if (!logger.enabled) {
           logger.unwatch = watch(unit, {
-            trace: false,
+            trace: true,
             handler: logger.handler,
           });
         }
@@ -212,9 +195,19 @@ export function createLogger<T>(
         kind: context.kind,
         name: context.name,
         fxID: context.stackMeta?.fxID,
+        trace: context.trace
+          ? stringify(
+              context.trace.map(trace => ({
+                kind: trace.kind,
+                name: trace.name,
+                value: trace.value,
+                loc: trace.loc,
+              }))
+            )
+          : undefined,
       } as Message;
 
-      data.payload = logger.process(payload, data);
+      data.payload = payload;
 
       if (data.payload !== false) {
         publishLog(data);
@@ -225,23 +218,14 @@ export function createLogger<T>(
   return logger;
 }
 
-export const attachLogger = <T>(
-  unit: Unit<T>,
-  config: AttachLoggerConfig = {}
-) => {
-  config = config || {};
-
-  if (typeof config !== "object") {
-    config = {};
-  }
-
+export const attachLogger = <T>(unit: Unit<T>) => {
   if (is.domain(unit)) {
     unit.onCreateEvent(attachLogger);
     unit.onCreateEffect(attachLogger);
     unit.onCreateStore(attachLogger);
     unit.onCreateDomain(attachLogger);
   } else {
-    const logger = createLogger(unit, config);
+    const logger = createLogger(unit);
     const unitWithLogger = unit as any as LoggableUnit<typeof unit>;
 
     unitWithLogger.logger = logger;
@@ -249,7 +233,7 @@ export const attachLogger = <T>(
     onUnitCreate(unitWithLogger);
 
     if (is.effect(unit)) {
-      attachLogger(unit.finally, config);
+      attachLogger(unit.finally);
     }
   }
 };

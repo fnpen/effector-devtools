@@ -74,7 +74,7 @@
     }
 
     & .ed-btn {
-      width: 32px;
+      min-width: 32px;
       height: 100%;
       padding: 4px;
       display: flex;
