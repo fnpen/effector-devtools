@@ -61,6 +61,13 @@ export const DiffToolbar = ({ id }) => {
       <XpathFilter name={current.name} />
       <div className="ed-toolbar-separator" />
       <a
+        className={clsx("ed-btn", { "ed-btn--selected": diffMode === "tree" })}
+        title="Tree"
+        onClick={() => changeDiffMode("tree")}
+      >
+        <Tree />
+      </a>
+      <a
         className={clsx("ed-btn", { "ed-btn--selected": diffMode === "split" })}
         title="Split"
         onClick={() => changeDiffMode("split")}
@@ -75,13 +82,6 @@ export const DiffToolbar = ({ id }) => {
         onClick={() => changeDiffMode("unified")}
       >
         <Unified />
-      </a>
-      <a
-        className={clsx("ed-btn", { "ed-btn--selected": diffMode === "tree" })}
-        title="Tree"
-        onClick={() => changeDiffMode("tree")}
-      >
-        <Tree />
       </a>
 
       <div className="ed-toolbar-space" />

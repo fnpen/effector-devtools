@@ -7,6 +7,7 @@ export interface StaticState {
   zoom: number;
   query: string;
   filterKind: string;
+  nameColumnWidth: number;
   diffMode: string;
   xpaths: { [name: string]: string };
 }

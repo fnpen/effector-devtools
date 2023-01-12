@@ -86,7 +86,7 @@ export const Json = ({
                       );
                     }
 
-                    return <strong>{text}: </strong>;
+                    return <>{text}: </>;
                   }
             }
             valueRenderer={(value: any) => {

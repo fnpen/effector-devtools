@@ -1,3 +1,16 @@
+## 0.4.0
+
+- Exclude budle from production build automatically (only +1.3kb without gzip), no speed impact
+- Column width resizing
+- Input cler button
+- Changed Diff modes order
+- Diff fonts unification
+- Styles improvements
+
+## 0.3.1
+
+- Fix meta undefined
+
 ## 0.3.0
 
 [BUG] Table height leaking

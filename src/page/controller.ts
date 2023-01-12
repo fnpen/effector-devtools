@@ -86,6 +86,7 @@ const sendState = debounce(() => {
 function setState(newState: StaticState) {
   state.enabled = newState.enabled;
   state.diffMode = newState.diffMode;
+  state.nameColumnWidth = newState.nameColumnWidth;
   state.autoSelectLast = newState.autoSelectLast;
   state.filterKind = newState.filterKind;
   state.xpaths = newState.xpaths;

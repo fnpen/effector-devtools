@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { useStore } from "effector-react";
 import PauseCircle from "line-awesome/svg/pause-circle.svg";
 import PlayCircle from "line-awesome/svg/play-circle.svg";
+import Times from "line-awesome/svg/times-solid.svg";
 import Trash from "line-awesome/svg/trash-solid.svg";
 import React from "react";
 import {
@@ -48,6 +49,14 @@ export const LogToolbar = () => {
           value={filterInputText}
           onChange={e => filterInputTextChange(e.target.value)}
         />
+        <div
+          className={clsx("ed-toolbar-input-clear", {
+            "ed-toolbar-input-clear--hidden": !filterInputText,
+          })}
+          onClick={() => filterInputTextChange("")}
+        >
+          <Times />
+        </div>
       </div>
       <div className="ed-toolbar-separator" />
       <a

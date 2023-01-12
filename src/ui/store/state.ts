@@ -32,6 +32,7 @@ export const $diffMode = $state.map(e => e.diffMode);
 export const $filterKind = $state.map(e => e.filterKind);
 export const $autoSelectLast = $state.map(e => e.autoSelectLast);
 export const $subscriptions = $state.map(e => e.subscriptions);
+export const $nameColumnWidth = $state.map(e => e.nameColumnWidth);
 export const $filterQuery = $state.map(e => e.query);
 export const $filterQueryRegexp = $filterQuery.map(filterQuery =>
   filterLogsFn(filterQuery)
@@ -44,6 +45,7 @@ export const changeFilterQuery = createEvent<string>();
 export const changeDiffMode = createEvent<string>();
 export const changeFilterKind = createEvent<string>();
 export const changeAutoSelectLast = createEvent<boolean>();
+export const changeNameColumnWidth = createEvent<number>();
 
 export const changeXPathInput = createEvent<[string, string]>();
 export const changeXPath = createEvent<[string, string]>();
@@ -78,6 +80,19 @@ $state.on(changeAutoSelectLast, (state, autoSelectLast) => ({
   ...state,
   autoSelectLast,
 }));
+$state.on(changeNameColumnWidth, (state, nameColumnWidth) => {
+  if (nameColumnWidth < 40) {
+    nameColumnWidth = 40;
+  }
+  if (nameColumnWidth > 400) {
+    nameColumnWidth = 400;
+  }
+
+  return {
+    ...state,
+    nameColumnWidth,
+  };
+});
 $state.on(changeFilterQuery, (state, query) => ({ ...state, query }));
 $state.on(changeDiffMode, (state, diffMode) => ({ ...state, diffMode }));
 $state.on(changeFilterKind, (state, filterKind) => ({ ...state, filterKind }));

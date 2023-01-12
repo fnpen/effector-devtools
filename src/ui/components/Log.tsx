@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useStoreMap } from "effector-react";
+import { useStore, useStoreMap } from "effector-react";
 import memoize from "fast-memoize";
 import pLimit from "p-limit";
 
@@ -13,6 +13,7 @@ import React, {
 import { colorizeJson, colorizeJsonString } from "../../common/colorizeJson";
 import { parseJson } from "../../common/parseJson";
 import { $logs, $storeHistory } from "../store/logs";
+import { $nameColumnWidth } from "../store/state";
 import { TableStateProvider } from "../Table";
 import { isEmpty } from "../utils/isEmpty";
 import { getPrevHistoryJson } from "./details/DetailsBodyDiff";
@@ -149,6 +150,8 @@ export const RowPayload = memo(
 export const Row = ({ children: id, "data-index": index }) => {
   const { selected, setSelected } = useContext(TableStateProvider);
 
+  const nameColumnWidth = useStore($nameColumnWidth);
+
   const log = useStoreMap({
     store: $logs,
     keys: [id],
@@ -163,21 +166,13 @@ export const Row = ({ children: id, "data-index": index }) => {
       })}
       onClick={() => setSelected(log.id)}
     >
-      <div className={"ed-list-item-icons"} title={log.op}>
+      <div title={`${log.op}: ${log.name}`} style={{ width: nameColumnWidth }}>
         <div
           className={clsx("op-icon", `op-icon-${log.kind}`)}
           title={log.kind}
         ></div>
-        {/* <div
-          className={clsx(
-            "op-icon op-icon-second",
-            `op-icon-${log.op}`,
-            `op-icon-${log.op}-${log.kind}`
-          )}
-          title={log.op}
-        ></div> */}
+        {log.name}
       </div>
-      <div title={log.name}>{log.name}</div>
       <RowPayload log={log} />
     </div>
   ) : null;
