@@ -463,6 +463,10 @@ export function getOwningDomainName(unit: Node | Unit<any>): string | null {
 function readLoc({
   meta,
 }: Node): void | { file?: string; line: number; column: number } {
+  if (!meta) {
+    return;
+  }
+
   const loc = "config" in meta ? meta.config.loc : meta.loc;
 
   return loc;
