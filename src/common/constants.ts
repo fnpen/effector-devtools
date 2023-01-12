@@ -7,7 +7,9 @@ export const defaultState: StaticState = {
   expanded: false,
   zoom: 1.0,
   nameColumnWidth: 140,
+  autoSelectLast: false,
   query: "",
   filterKind: "",
+  xpaths: {},
   diffMode: "split",
 };

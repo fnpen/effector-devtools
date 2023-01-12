@@ -1,4 +1,4 @@
-import { Effect, Event, Store } from "effector";
+import { Domain, Effect, Event, Store } from "effector";
 
 export interface StaticState {
   enabled: boolean;
@@ -12,13 +12,6 @@ export interface StaticState {
   xpaths: { [name: string]: string };
 }
 
-export interface AttachLoggerConfig {
-  // name?: string;
-  // prefix?: string;
-  // kind?: string;
-  process?: ProcessFn;
-}
-
 export interface FullState extends StaticState {
   subscriptions: string[];
 }
@@ -26,7 +19,7 @@ export interface FullState extends StaticState {
 export interface Message {
   id: number;
   kind: string;
-  name: string;
+  name?: string;
   time: number;
   payload?: any;
   fxID?: string;
@@ -51,17 +44,17 @@ export type ProcessFn = (
   meta: Omit<Message, "payload">
 ) => any | false;
 
-export interface Loggable {
+export interface Loggable<T> {
+  unit: AnyUnit<T>;
   enabled: boolean;
   unwatch?: Function;
   setEnabled: (enabled: boolean) => void;
-  getKind: () => string;
   getName: () => string;
   handler: (context: any) => void;
-  process: ProcessFn;
 }
 
-export type AnyUnit<T> = Store<T> | Effect<T, any> | Event<T>;
-export type LoggableUnit<T> = AnyUnit<T> & {
-  logger: Loggable;
-};
+export type AnyUnit<T> =
+  | Store<T>
+  | Effect<T, unknown, unknown>
+  | Event<T>
+  | Domain;

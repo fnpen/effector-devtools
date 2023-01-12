@@ -1,12 +1,10 @@
 import type {
   AnyUnit,
   Loggable,
-  LoggableUnit,
   Message,
   StaticState,
 } from "./../common/types";
 
-import type { Unit } from "effector";
 import { is } from "effector";
 import debounce from "lodash.debounce";
 import { defaultState } from "../common/constants";
@@ -27,15 +25,11 @@ export const logDiff = (name: string, ...args: any[]) => {
   });
 };
 
-export const logName = (name: string, ...args: any[]) => {
+export const log = (...args: any[]) => logName(undefined, ...args);
+
+export const logName = (name: string | undefined, ...args: any[]) => {
   publishLog({
     name,
-    payload: args,
-  });
-};
-
-export const log = (...args: any[]) => {
-  publishLog({
     payload: args,
   });
 };
@@ -68,14 +62,14 @@ const saveState = debounce(() => {
   window.localStorage.setItem("effector-devtools", JSON.stringify(state));
 }, 80);
 
-const units: Set<LoggableUnit<any>> = new Set();
+const units: Set<Loggable<any>> = new Set();
 
 function getState() {
   return {
     ...state,
     subscriptions: Array.from(units.values())
-      .filter(unit => unit.logger.enabled)
-      .map(unit => unit.logger.getName()),
+      .filter(logger => logger.enabled)
+      .map(logger => logger.getName()),
   };
 }
 
@@ -120,39 +114,30 @@ function setFilterQuery(query: string) {
 function refreshSubscriptions() {
   const filterFn = filterLogsFn(state.query);
 
-  for (let unit of units) {
+  for (let logger of units) {
     if (!state.enabled) {
-      unit.logger.setEnabled(false);
+      logger.setEnabled(false);
       continue;
     }
 
-    unit.logger.setEnabled(filterFn(unit.logger.getName()));
+    logger.setEnabled(filterFn(logger.getName()));
   }
 }
 
-export function onUnitCreate<T>(unit: LoggableUnit<T>) {
-  units.add(unit);
+export function onUnitCreate<T>(logger: Loggable<T>) {
+  units.add(logger);
 
   if (state.enabled) {
-    unit.logger.setEnabled(true);
+    logger.setEnabled(true);
   }
-
-  // It's non informative for unit event
-  // if (
-  //   unit.kind !== "store" &&
-  //   !(
-  //     unit.logger.getKind() === "effect" &&
-  //     ["done", "fail"].includes(unit.shortName)
-  //   )
-  // ) {
-  //   unit.logger.log("unit-create");
-  // }
 
   sendState();
 }
 
 export function createLogger<T>(unit: AnyUnit<T>) {
-  const logger: Loggable = {
+  const logger: Loggable<T> = {
+    unit,
+
     enabled: false,
 
     getName: () => {
@@ -166,7 +151,7 @@ export function createLogger<T>(unit: AnyUnit<T>) {
 
       if (enabled) {
         if (!logger.enabled) {
-          logger.unwatch = watch(unit, {
+          logger.unwatch = watch(logger.unit, {
             trace: true,
             handler: logger.handler,
           });
@@ -220,7 +205,7 @@ export function createLogger<T>(unit: AnyUnit<T>) {
   return logger;
 }
 
-export const attachLogger = <T>(unit: Unit<T>) => {
+export const attachLogger = <T>(unit: AnyUnit<T>) => {
   if (is.domain(unit)) {
     unit.onCreateEvent(attachLogger);
     unit.onCreateEffect(attachLogger);
@@ -228,11 +213,8 @@ export const attachLogger = <T>(unit: Unit<T>) => {
     unit.onCreateDomain(attachLogger);
   } else {
     const logger = createLogger(unit);
-    const unitWithLogger = unit as any as LoggableUnit<typeof unit>;
 
-    unitWithLogger.logger = logger;
-
-    onUnitCreate(unitWithLogger);
+    onUnitCreate(logger);
 
     if (is.effect(unit)) {
       attachLogger(unit.finally);

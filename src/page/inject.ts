@@ -2,15 +2,11 @@ import {
   createEffect as createEffectOrig,
   createEvent as createEventOrig,
   createStore as createStoreOrig,
-  Effect,
-  Event,
-  Store,
 } from "effector";
-import { Loggable } from "../common/types";
 import { attachLogger } from "./controller";
 
 const createStore: typeof createStoreOrig = <T>(...args: any) => {
-  const event = createStoreOrig(...args) as Loggable & Store<T>;
+  const event = createStoreOrig(...args);
 
   const mapOrig = event.map;
 
@@ -33,14 +29,14 @@ const createStore: typeof createStoreOrig = <T>(...args: any) => {
   return event;
 };
 const createEvent: typeof createEventOrig = <T>(...args: any) => {
-  const event = createEventOrig(...args) as Loggable & Event<T>;
+  const event = createEventOrig(...args);
 
   attachLogger(event);
 
   return event;
 };
 const createEffect: typeof createEffectOrig = <T, A>(...args: any) => {
-  const effect = createEffectOrig(...args) as Loggable & Effect<T, A>;
+  const effect = createEffectOrig(...args);
 
   attachLogger(effect);
 

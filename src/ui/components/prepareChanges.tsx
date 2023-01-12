@@ -52,8 +52,16 @@ export const prepareChanges = (prev: any, current: any) => {
       this.path.length > 1
     ) {
       const oldValue = orig.get(this.path.slice(1));
+
+      const oldValueText =
+        oldValue !== undefined
+          ? isPrimitive(oldValue)
+            ? oldValue
+            : JSON.stringify(oldValue)
+          : "undefined";
+
       this.update(
-        `<span style='color: #F44336;font-weight: bold;text-decoration: line-through;'>${oldValue}</span>`
+        `<span style='color: #F44336;font-weight: bold;text-decoration: line-through;'>${oldValueText}</span>`
       );
     }
   });
