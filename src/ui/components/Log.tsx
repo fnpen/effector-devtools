@@ -166,7 +166,10 @@ export const Row = ({ children: id, "data-index": index }) => {
       })}
       onClick={() => setSelected(log.id)}
     >
-      <div title={`${log.op}: ${log.name}`} style={{ width: nameColumnWidth }}>
+      <div
+        title={`${log.kind}: ${log.name}`}
+        style={{ width: nameColumnWidth }}
+      >
         <div
           className={clsx("op-icon", `op-icon-${log.kind}`)}
           title={log.kind}

@@ -25,8 +25,6 @@ async function buildUi(config, configCSS) {
     write: false,
   });
 
-  // console.log(styles.to);
-
   const { css } = await postcss([
     autoprefixer,
     postcssPresetEnv({ stage: 0 }),
@@ -36,7 +34,7 @@ async function buildUi(config, configCSS) {
     entryPoints: [path.join(basePath, "src/ui/index.tsx")],
     bundle: true,
     sourcemap: true,
-    format: "esm",
+    format: "cjs",
     write: false,
     loader: {
       ".svg": "text",
@@ -61,7 +59,7 @@ async function buildUi(config, configCSS) {
     define: {
       ...(config && config.define),
       __CSS__: JSON.stringify(css),
-      // "process.env.NODE_ENV": '"production"',
+      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
     },
   });
 
@@ -96,7 +94,7 @@ async function buildMain(config) {
     write: true,
     ...config,
     define: {
-      __DEV__: false,
+      __DEV__: isDev,
       __UI_SRC__: JSON.stringify(__UI_SRC__),
       ...(config && config.define),
     },

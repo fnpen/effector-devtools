@@ -188,6 +188,7 @@ export function createLogger<T>(unit: AnyUnit<T>) {
                 kind: trace.kind,
                 name: trace.name,
                 value: trace.value,
+                fxID: context.stackMeta?.fxID,
                 loc: trace.loc,
               }))
             )

@@ -10,17 +10,8 @@
     "development"
   ],
   "main": "./index.js",
+  "type": "commonjs",
   "typings": "./devtools.d.ts",
-  "exports": {
-    ".": {
-      "types": "./devtools.d.ts",
-      "require": "./index.js"
-    },
-    "./babel-plugin": {
-      "default": "./dist/effector-babel-plugin.js"
-    },
-    "./package.json": "./package.json"
-  },
   "scripts": {
     "tscheck": "tsc --noEmit",
     "start": "node scripts/server",

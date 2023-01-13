@@ -32,7 +32,7 @@ function initPublisher() {
 
 export const getPublisher = (ns: string) => {
   if (!isBrowser) {
-    return null; // { ns: () => ({ provide: () => {}, publish: () => {} }) };
+    return null;
   }
 
   if (!publisher) {
