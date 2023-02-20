@@ -467,7 +467,7 @@ function readLoc({
     return;
   }
 
-  const loc = "config" in meta ? meta.config.loc : meta.loc;
+  const loc = meta.config ? meta.config.loc : meta.loc;
 
   return loc;
 }
